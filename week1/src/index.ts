@@ -10,7 +10,7 @@ const members: Member[] = [
     id: 1,
     name: "승구리",
     role: "leader",
-    githubId: "seunguri",
+    githubId: "shinisme",
   },
   {
     id: 2,
@@ -32,7 +32,7 @@ function introduceMember(id: number): string {
 }
 
 console.log(introduceMember(1));
-// 승구리 / 역할: leader / GitHub: seunguri
+// 승구리 / 역할: leader / GitHub: shinisme
 
 console.log(introduceMember(2));
 // 챌린저 / 역할: member / GitHub: 등록 안 함
