@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "rootDir": "./week1-typescript",
+    "outDir": "./dist",
+    "strict": true,
+    "isolatedModules": true,
+    "moduleDetection": "force"
+  },
+  "include": ["week1-typescript/**/*.ts"]
+}
