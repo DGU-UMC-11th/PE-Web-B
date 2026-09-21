@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# 환경 변수
+.env
+.env.*
+!.env.example
+
+# 에디터 / AI 도구
+.claude/
+CLAUDE.md
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
