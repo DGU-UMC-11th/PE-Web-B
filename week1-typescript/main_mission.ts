@@ -11,12 +11,13 @@
 type typeMember = {
     ID : number,
     name : string,
+    role : "leader" | "member",
     githubID? : string,
 };
 
 const dataMember: typeMember[] = [
-    {ID:1, name:"ㅇㅇ"},
-    {ID:2, name:"ㄴㄴ", githubID:"nono"},
+    {ID:1, name:"ㅇㅇ", role: "member"},
+    {ID:2, name:"ㄴㄴ", githubID:"nono", role: "member"},
 ]
 
 //회원 ID로 정보를 찾아 안내 문구를 만들고, GitHub 아이디가 없는 회원과 존재하지 않는 회원도 오류 없이 처리해요.

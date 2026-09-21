@@ -17,5 +17,5 @@ function formatMemberId(input: unknown): string
     {
         return `ID텍스트 : ${input}`
     }
-    return `ID?? : ${input}`
+    return `에러`
 }
