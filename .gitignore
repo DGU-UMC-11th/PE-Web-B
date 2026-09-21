@@ -1,0 +1,25 @@
+# 의존성 (pnpm install로 다시 만들 수 있음)
+node_modules/
+
+# 컴파일 결과물 (tsc로 다시 만들 수 있음)
+dist/
+
+# 환경 변수
+.env
+.env.*
+
+# 로그
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# 에디터 설정
+.vscode/
+.idea/
+
+# OS 생성 파일
+.DS_Store
+Thumbs.db
+
+# 개인 학습 정리 노트
+keyword.txt
