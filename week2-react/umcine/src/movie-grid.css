@@ -1,0 +1,22 @@
+/* movie-grid.css */
+
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  
+  /* 화면이 768px 이하이면 2열 */
+  @media (max-width: 768px) {
+    .movie-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  /* 화면이 480px 이하이면 1열 */
+  @media (max-width: 480px) {
+    .movie-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
