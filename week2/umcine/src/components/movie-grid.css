@@ -1,0 +1,24 @@
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  column-gap: 18px;
+  row-gap: 21px;
+}
+
+@media (max-width: 1024px) {
+  .movie-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .movie-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .movie-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}

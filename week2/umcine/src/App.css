@@ -1,0 +1,13 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 80px;
+}
+
+.main > h1 {
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 44px;
+  letter-spacing: -1.71px;
+}
