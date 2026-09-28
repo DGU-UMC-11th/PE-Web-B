@@ -3,7 +3,7 @@
 import { createContext, useState } from "react";
 
 const initialPage: number = 1;
-const possiblePages: number[] = [1,2,3,4,5];
+const possiblePages: number[] = [1,2,3,4];
 
 type PageContextType = {
     page: number,

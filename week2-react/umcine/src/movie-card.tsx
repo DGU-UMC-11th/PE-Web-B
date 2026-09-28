@@ -16,9 +16,9 @@ export default function MovieCard({movie} : MovieCardProps) {
 
     return (
         <div className="movie-card">
-            <img className="movie-card__poster" src={movie.posterPath}></img>
+            <img className="movie-card__poster" src={movie.posterPath} alt="이미지가 존재하지 않음"></img>
             <h3>{movie.title}</h3>
-            <p>{movie.genres}</p>
+            <p>{movie.genres.join(", ")}</p>
             <p>{movie.releaseDate}</p>
             <button onClick={() => toggleBookmark(movie.id)} aria-pressed={movie.isBookmarked}>
                 {movie.isBookmarked ? "북마크됨" : "북마크하기"}

@@ -38,7 +38,9 @@ SELECT
     ) as book_like
 FROM
     book
-JOIN
+LEFT JOIN
     tag_texts
 ON
-    book.book_id = tag_texts.book_id;
+    book.book_id = tag_texts.book_id
+JOIN params
+ON params.TARGET_BOOK_ID = book.book_id;

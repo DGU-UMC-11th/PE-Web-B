@@ -8,7 +8,7 @@ export function PageSelector() {
     
     return (<div>
         {possiblePages.map((pageNum) => (
-            <button onClick={() => changePage(pageNum)}>
+            <button onClick={() => changePage(pageNum)} aria-current="page">
                 {page === pageNum ? `[ ${pageNum} ]` : pageNum}
             </button>
         ))}

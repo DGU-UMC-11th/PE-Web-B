@@ -36,7 +36,7 @@ export default function App() {
             </button>
         </ThemeContext.Provider>
     );
-    //ThemeContext에서 value를 지정하지 않으면, createContext에서의 값을 씀
+    //상위 트리에 ThemeContext.Provider가 없을 때만 createContext의 기본값을 씀
     //또는 ThemeContext가 없으면, 이하 동문
 
     /*
