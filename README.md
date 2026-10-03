@@ -2,6 +2,10 @@
 
 DGU-UMC 11기 스터디 Web-B조
 
+- 시놀로지 nas 서버에서 mariadb 열면 root는 보안 때문에 ssh로 들어가야만 가능하다.
+- root로 접근하면 timeout 뜸
+- 따라서 ssh로 들어간 후, 계정을 만들고 grant 하면 된다.
+
 ## 💻 Member
 
 | 이름  |                  GitHub                   |
