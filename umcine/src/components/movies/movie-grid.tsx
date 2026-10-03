@@ -1,6 +1,5 @@
-import type { Movie } from "../types/movie";
+import type { Movie } from "../../types/movie";
 import MovieCard from "./movie-card";
-import styles from "./movie-grid.module.css";
 
 interface MovieGridProps {
   movies: Movie[];
@@ -14,7 +13,7 @@ export default function MovieGrid({
   onSelectMovie,
 }: MovieGridProps) {
   return (
-    <section className={styles.grid}>
+    <section className="grid w-full grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-7 md:grid-cols-4 xl:grid-cols-5">
       {movies.map((movie) => (
         <MovieCard
           key={movie.id}

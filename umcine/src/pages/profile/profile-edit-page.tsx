@@ -1,5 +1,4 @@
 import { useState } from "react";
-import styles from "./profile-edit-page.module.css";
 
 interface ProfileEditPageProps {
   currentNickname: string;
@@ -32,68 +31,68 @@ export default function ProfileEditPage({
   };
 
   return (
-    <div className={styles["profile-edit-page"]}>
-      <div className={styles.container}>
-        <div className={styles["header-row"]}>
+    <div className="min-h-[calc(100vh-64px-80px)] w-full">
+      <div className="mx-auto flex max-w-[1360px] flex-col px-10 pt-10 pb-20">
+        <div className="mb-12 flex items-center justify-between">
           <div>
-            <h1 className={styles.title}>내 정보 수정</h1>
-            <p className={styles.subtitle}>
+            <h1 className="text-[26px] font-extrabold tracking-[-0.5px] text-gray-900">내 정보 수정</h1>
+            <p className="mt-1 text-sm text-gray-500">
               닉네임과 프로필 이미지만 변경할 수 있어요.
             </p>
           </div>
           <button
             type="button"
-            className={styles["save-btn"]}
+            className="h-10 rounded-lg bg-blue-600 px-5 text-sm font-bold text-white transition-colors hover:bg-blue-700"
             onClick={handleSave}
           >
             변경사항 저장
           </button>
         </div>
 
-        <div className={styles["content-card"]}>
+        <div className="mb-[60px] grid grid-cols-1 gap-8 min-[769px]:grid-cols-[280px_1fr] min-[769px]:gap-[60px]">
           {/* 아바타 영역 */}
-          <div className={styles["avatar-section"]}>
-            <div className={styles["avatar-box"]}>
-              <div className={styles["avatar-circle"]}>
+          <div className="flex flex-col items-center">
+            <div className="relative mb-3 size-[100px]">
+              <div className="flex size-full items-center justify-center rounded-full bg-gray-200">
                 <img
                   src="/movie-icons/person.svg"
                   alt="Profile Avatar"
-                  className={styles["person-icon"]}
+                  className="size-12 opacity-60"
                 />
               </div>
               <button
                 type="button"
-                className={styles["edit-badge"]}
+                className="absolute right-0 bottom-0 flex size-7 items-center justify-center rounded-full border border-gray-300 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.08)] transition-colors hover:bg-gray-100"
                 aria-label="프로필 이미지 변경"
               >
                 <img
                   src="/movie-icons/edit.svg"
                   alt=""
-                  className={styles["edit-icon"]}
+                  className="size-4"
                 />
               </button>
             </div>
-            <p className={styles["avatar-title"]}>프로필 이미지</p>
-            <p className={styles["avatar-desc"]}>선택 사항 · 최대 5MB</p>
+            <p className="text-sm font-bold text-gray-900">프로필 이미지</p>
+            <p className="mt-0.5 text-xs text-gray-400">선택 사항 · 최대 5MB</p>
           </div>
 
           {/* 입력 폼 영역 */}
-          <div className={styles["form-section"]}>
-            <div className={styles["form-group"]}>
-              <label className={styles.label} htmlFor="nickname">
+          <div className="flex max-w-[600px] flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-gray-900" htmlFor="nickname">
                 닉네임
               </label>
-              <div className={styles["input-row"]}>
+              <div className="flex h-12 items-center rounded-lg border border-gray-200 bg-white px-4 transition-colors focus-within:border-blue-600">
                 <input
                   id="nickname"
                   type="text"
-                  className={styles.input}
+                  className="h-full flex-1 bg-transparent text-sm text-gray-900 outline-none"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                 />
                 <button
                   type="button"
-                  className={styles["check-btn"]}
+                  className="text-[13px] font-semibold whitespace-nowrap text-blue-600 hover:text-blue-700"
                   onClick={() => alert("사용 가능한 닉네임입니다.")}
                 >
                   중복 확인
@@ -101,14 +100,14 @@ export default function ProfileEditPage({
               </div>
             </div>
 
-            <div className={styles["form-group"]}>
-              <label className={styles.label} htmlFor="email">
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-bold text-gray-900" htmlFor="email">
                 이메일
               </label>
               <input
                 id="email"
                 type="email"
-                className={styles["disabled-input"]}
+                className="h-12 w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm text-gray-500 outline-none"
                 value={currentEmail}
                 disabled
                 readOnly
@@ -118,16 +117,16 @@ export default function ProfileEditPage({
         </div>
 
         {/* 회원 탈퇴 영역 */}
-        <div className={styles["withdraw-box"]}>
-          <div className={styles["withdraw-info"]}>
-            <h2 className={styles["withdraw-title"]}>회원 탈퇴</h2>
-            <p className={styles["withdraw-desc"]}>
+        <div className="mt-10 flex items-center justify-between rounded-[10px] border border-rose-200 bg-rose-50 px-6 py-5">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-sm font-bold text-rose-600">회원 탈퇴</h2>
+            <p className="text-[13px] text-rose-500">
               탈퇴하면 작성한 평점, 후기와 즐겨찾기가 모두 삭제되며 복구할 수 없습니다.
             </p>
           </div>
           <button
             type="button"
-            className={styles["withdraw-btn"]}
+            className="h-9 rounded-md border border-rose-300 bg-white px-[18px] text-[13px] font-bold text-rose-600 transition-colors hover:border-rose-400 hover:bg-rose-100"
             onClick={handleWithdrawClick}
           >
             회원 탈퇴
