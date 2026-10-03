@@ -1,4 +1,4 @@
-import styles from "./pagination.module.css";
+import { cn } from "../../utils/cn";
 
 interface PaginationProps {
   currentPage: number;
@@ -26,10 +26,10 @@ export default function Pagination({
   };
 
   return (
-    <nav className={styles.pagination} aria-label="페이지 네비게이션">
+    <nav className="mt-8 mb-4 flex items-center justify-center gap-2" aria-label="페이지 네비게이션">
       <button
         type="button"
-        className={styles["nav-btn"]}
+        className="flex size-8 items-center justify-center rounded-md transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent"
         onClick={handlePrev}
         disabled={currentPage <= 1}
         aria-label="이전 페이지"
@@ -37,18 +37,20 @@ export default function Pagination({
         <img
           src="/movie-icons/chevron-left.svg"
           alt=""
-          className={styles["nav-icon"]}
+          className="size-[18px]"
         />
       </button>
 
-      <div className={styles["page-list"]}>
+      <div className="flex items-center gap-1">
         {pages.map((page) => (
           <button
             key={page}
             type="button"
-            className={`${styles["page-btn"]} ${
-              page === currentPage ? styles.active : ""
-            }`}
+            className={cn(
+              "flex size-8 items-center justify-center rounded-md text-sm font-medium text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900",
+              page === currentPage &&
+                "bg-gray-900 font-bold text-white hover:bg-gray-900 hover:text-white",
+            )}
             onClick={() => onPageChange && onPageChange(page)}
             aria-current={page === currentPage ? "page" : undefined}
           >
@@ -59,7 +61,7 @@ export default function Pagination({
 
       <button
         type="button"
-        className={styles["nav-btn"]}
+        className="flex size-8 items-center justify-center rounded-md transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent"
         onClick={handleNext}
         disabled={currentPage >= totalPages}
         aria-label="다음 페이지"
@@ -67,7 +69,7 @@ export default function Pagination({
         <img
           src="/movie-icons/chevron-right.svg"
           alt=""
-          className={styles["nav-icon"]}
+          className="size-[18px]"
         />
       </button>
     </nav>
