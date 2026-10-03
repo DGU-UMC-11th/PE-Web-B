@@ -1,0 +1,14 @@
+/* movie-card.css */
+
+.movie-card {
+    min-width: 0;
+  }
+  
+  .movie-card__poster {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  
