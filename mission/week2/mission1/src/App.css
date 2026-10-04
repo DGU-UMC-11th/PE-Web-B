@@ -1,0 +1,17 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app__main {
+  flex: 1;
+  padding: 46px 0 80px;
+}
+
+.app__title {
+  margin-bottom: 28px;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
