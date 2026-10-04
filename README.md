@@ -2,9 +2,7 @@
 
 DGU-UMC 11기 스터디 Web-B조
 
-- 시놀로지 nas 서버에서 mariadb 열면 root는 보안 때문에 ssh로 들어가야만 가능하다.
-- root로 접근하면 timeout 뜸
-- 따라서 ssh로 들어간 후, 계정을 만들고 grant 하면 된다.
+- 내 서버는 시놀로지 nas 서버였는데 mariadb10으로 열었다. root가 보안을 위해서 내부에서만 이용이 가능하였기에 ssh shell로 들어가서 계정을 만든다. GRANT로 최고 권한을 주면 됨
 
 ## 💻 Member
 

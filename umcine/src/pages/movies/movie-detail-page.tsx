@@ -39,7 +39,7 @@ export function MovieDetailPage() {
                 </div>
             </section>
 
-            <div className="mx-auto grid max-w-[1170px] gap-8 py-5 md:grid-cols-[183px_1fr_300px]">
+            <div className="mx-auto grid max-w-[1170px] gap-8 py-5 md:grid-cols-[183px_1fr]"> {/*_300px*/}
                 <img
                     src={movie.posterPath}
                     alt={`${movie.title} 포스터`}

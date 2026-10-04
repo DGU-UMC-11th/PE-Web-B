@@ -1,5 +1,5 @@
 // src/book.controller.ts
-import { Controller, Get, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Patch } from '@nestjs/common';
 import { BookService } from './book.service.js';
 import { Body, Post } from '@nestjs/common';
 
@@ -15,7 +15,7 @@ export class BookController {
   }
 
   @Get('category/:categoryID')
-  async findBooksByCategoryID(@Param('categoryID') categoryID: number): Promise<any> {
+  async findBooksByCategoryID(@Param('categoryID', ParseIntPipe) categoryID: number): Promise<any> {
     return await this.bookService.findBooksByCategoryID(categoryID);
   }
 

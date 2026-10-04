@@ -1,5 +1,5 @@
 // src/book.controller.ts
-import { Controller, Param, Patch } from '@nestjs/common';
+import { Controller, Param, ParseIntPipe, Patch } from '@nestjs/common';
 import { RentalsService } from './rentals.service.js';
 import { Body, Post } from '@nestjs/common';
 
@@ -13,7 +13,7 @@ export class RentalsController {
     }
 
     @Patch(':rentalID/return')
-    async returnBook(@Param('rentalID') rentalID:number): Promise<string> {
+    async returnBook(@Param('rentalID', ParseIntPipe) rentalID:number): Promise<string> {
         return await this.rentalsService.returnBook(rentalID);
     }
 }
