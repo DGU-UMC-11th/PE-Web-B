@@ -1,17 +1,19 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { movies } from "../../data/movies";
+import { useMovies } from "../../contexts/movies-context";
 import type { Movie } from "../../types/movie";
 import { cn } from "../../utils/cn";
 
 export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
+  const { movies } = useMovies();
   const movie = movies.find((item) => String(item.id) === movieId);
   if (!movie) return <main className="grid flex-1 place-items-center px-4 py-32"><div className="text-center"><h1 className="text-lg font-semibold">영화를 찾을 수 없어요.</h1><Link to="/" className="mt-4 inline-block text-sm text-blue-600">영화 목록으로 돌아가기</Link></div></main>;
   return <MovieDetail key={movie.id} movie={movie} />;
 }
 function MovieDetail({ movie }: { movie: Movie }) {
-  const [bookmarked, setBookmarked] = useState(movie.isBookmarked);
+  const { toggleBookmark } = useMovies();
+  const bookmarked = movie.isBookmarked;
   const [savedReview] = useState(() => {
     try {
       const saved: unknown = JSON.parse(localStorage.getItem(`umcine-review-${movie.id}`) ?? "null");
@@ -40,7 +42,7 @@ function MovieDetail({ movie }: { movie: Movie }) {
       <div>
         <h2 className="text-xl font-bold tracking-[-0.6px]">{movie.tagline}</h2>
         <p className="mt-3 text-sm leading-6 text-[#667085]">{movie.overview}</p>
-        <button className={cn("mt-4 inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold", bookmarked ? "bg-blue-700 text-white" : "bg-[#2563eb] text-white hover:bg-blue-700")} type="button" aria-pressed={bookmarked} onClick={() => setBookmarked(!bookmarked)}><img className="size-4 invert" src={bookmarked ? "/icons/bookmark.svg" : "/icons/bookmark-outline.svg"} alt="" />{bookmarked ? "즐겨찾기 해제" : "즐겨찾기"}</button>
+        <button className={cn("mt-4 inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold", bookmarked ? "bg-blue-700 text-white" : "bg-[#2563eb] text-white hover:bg-blue-700")} type="button" aria-pressed={bookmarked} onClick={() => toggleBookmark(movie.id)}><img className="size-4 invert" src={bookmarked ? "/icons/bookmark.svg" : "/icons/bookmark-outline.svg"} alt="" />{bookmarked ? "즐겨찾기 해제" : "즐겨찾기"}</button>
       </div>
       <aside className="border-l border-[#e0e4eb] pl-[30px] max-[1100px]:col-start-2 max-[1100px]:border-l-0 max-[1100px]:pl-0 max-[760px]:col-start-auto">
         <h2 className="text-xl font-bold">내 평점</h2>
@@ -55,4 +57,5 @@ function MovieDetail({ movie }: { movie: Movie }) {
     </section>
   </main>;
 }
+
 
