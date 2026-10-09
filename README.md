@@ -2,6 +2,13 @@
 
 DGU-UMC 11기 스터디 Web-B조
 
+<<<<<<< HEAD
+=======
+3주차 이후로부터 umcine과 week3-nestjs를 이용합니다.
+
+- 내 서버는 시놀로지 nas 서버였는데 mariadb10으로 열었다. root가 보안을 위해서 내부에서만 이용이 가능하였기에 ssh shell로 들어가서 계정을 만든다. GRANT로 최고 권한을 주면 됨
+
+>>>>>>> 521ece4 (mission/#04)
 ## 💻 Member
 
 | 이름  |                  GitHub                   |
