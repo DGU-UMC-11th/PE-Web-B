@@ -3,12 +3,15 @@
 import { useContext } from "react";
 import { MovieContext } from "../../contexts/movie-context";
 import MovieCard from "./movie-card";
-import { PAGE_SIZE, PageContext } from "../../contexts/page-bar-context";
+import { PAGE_SIZE } from "../../contexts/page-bar-context";
+import { usePageBarStore } from "../../stores/page-bar-store";
 
 export default function MovieGrid() {
     const {movies} = useContext(MovieContext);
-    const {page} = useContext(PageContext);
 
+    const page = usePageBarStore((state) =>
+        state.currentPage,
+    );
     const targetMovies = movies.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
 
     return (

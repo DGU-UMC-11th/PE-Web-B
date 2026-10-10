@@ -1,12 +1,13 @@
+//movie-detail-page.tsx
+
 import { Link, useParams } from "@tanstack/react-router";
 import { useContext } from "react";
 import { MovieContext } from "../../contexts/movie-context";
+import { BookmarkButtonDetailPage } from "../../components/bookmark-button";
 
 export function MovieDetailPage() {
     const {movieId} = useParams({from: "/movies/$movieId"});
-    //useParams가 { movieId: "123" }로 리턴하기 때문에 {movieId} 로 받기
-    //useParams().movieId로도 ㄱㄴ
-    const {movies, toggleBookmark} = useContext(MovieContext);
+    const {movies} = useContext(MovieContext);
 
     const movie = movies.find((m) => m.id === Number(movieId));
     if (!movie) {
@@ -48,19 +49,7 @@ export function MovieDetailPage() {
                 <div>
                     <h2 className="text-xl font-bold">{movie.tagline}</h2>
                     <p className="mt-3 text-sm leading-relaxed text-gray-600">{movie.overview}</p>
-                    <button
-                        type="button"
-                        onClick={() => toggleBookmark(movie.id)}
-                        aria-pressed={movie.isBookmarked}
-                        className="mt-4 flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white"
-                    >
-                        <img
-                            src={movie.isBookmarked ? "/icons/bookmark.svg" : "/icons/bookmark-outline.svg"}
-                            alt=""
-                            className="size-4 invert"
-                        />
-                        {movie.isBookmarked ? "즐겨찾기 해제" : "즐겨찾기"}
-                    </button>
+                    <BookmarkButtonDetailPage movieId={movie.id}/>
                 </div>
                 {/* <div className="md:border-l md:border-gray-200 md:pl-6">
                     
