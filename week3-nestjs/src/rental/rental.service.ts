@@ -3,7 +3,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BookEntity, RentalEntity, UserEntity } from '../entities.js';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { RentBookDto } from './dto/rental.dto.js';
 
 @Injectable()
@@ -33,24 +33,23 @@ export class RentalService {
         if(!isBookExists) throw new NotFoundException("없는 책");
         
         return await this.dataSource.transaction(async (manager) => {
-            const isBookRentable = await manager.existsBy(
+            const book = await manager.findOne(
                 BookEntity,
                 {
-                    bookId: body.bookId.toString(),
-                    isAvailable: true,
+                    where: {
+                        bookId: body.bookId.toString(),
+                        isAvailable: true,
+                    },
+                    lock: {
+                        mode: "pessimistic_write"
+                    }
                 }
             );
-            if(!isBookRentable) throw new ConflictException("이미 대여된 도서");
+
+            if(!book) throw new ConflictException("이미 대여된 도서");
             
-            await manager.update(
-               BookEntity,
-               {
-                    bookId: body.bookId.toString(),
-               },
-               {
-                    isAvailable: false,
-               }
-            );
+            book.isAvailable = true;
+            await manager.save(BookEntity, book);
 
             const dueDate = new Date();
             dueDate.setDate(dueDate.getDate() + 7); 
@@ -75,22 +74,31 @@ export class RentalService {
                 {
                     where: {
                         rentalId: rentalID.toString(),
+                        returnedAt: IsNull(),
+                    },
+                    lock: {
+                        mode: "pessimistic_write"
                     }
                 }
             );
             if(!rental) throw new NotFoundException("없는 대여");
-    
-            if(rental.returnedAt) throw new ConflictException("이미 반납함");
-            
-            await manager.update(
-               BookEntity,
-               {
-                    bookId: rental.bookId,
-               },
-               {
-                    isAvailable: true,
-               }
+
+            const rentedBook = await manager.findOne(
+                BookEntity,
+                {
+                    where: {
+                        bookId: rental.bookId,
+                    },
+                    lock: {
+                        mode: "pessimistic_write"
+                    }
+                }
             );
+
+            if(!rentedBook) throw new ConflictException("이미 반납함");
+
+            rentedBook.isAvailable = true;
+            await manager.save(BookEntity, rentedBook);
 
             return await manager.update(
                 RentalEntity,

@@ -1,5 +1,5 @@
 //create-book.dto.ts
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
     IsInt,
     IsNotEmpty,
@@ -15,6 +15,8 @@ export class CreateBookDto {
 
     @IsNotEmpty()
     @MaxLength(100)
+    @IsString()
+    @Transform(({value}) => (typeof value === "string" ? value.trim() : value))
     title: string;
 
     @IsOptional()

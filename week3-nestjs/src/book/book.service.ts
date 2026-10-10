@@ -1,5 +1,5 @@
 //book.service.ts
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { BookEntity, CategoryEntity } from '../entities.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BookResponseDto } from './dto/book-response.dto.js';
@@ -77,7 +77,7 @@ export class BookService {
 
         const isBookTitleExists = (body.title.length !== 0);
         if(!isBookTitleExists) {
-            throw new NotFoundException("없는 제목");
+            throw new BadRequestException("없는 제목");
         }
 
         const isBookExists = await this.bookRepository.existsBy({
@@ -94,6 +94,6 @@ export class BookService {
             description: body.description?.trim(),
             categoryId: body.categoryId.toString(),
         });
-        return await this.bookRepository.save(book);
+        return BookResponseDto.from(await this.bookRepository.save(book));
     }
 }
