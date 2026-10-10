@@ -48,7 +48,7 @@ export class RentalService {
 
             if(!book) throw new ConflictException("이미 대여된 도서");
             
-            book.isAvailable = true;
+            book.isAvailable = false;
             await manager.save(BookEntity, book);
 
             const dueDate = new Date();
@@ -95,7 +95,7 @@ export class RentalService {
                 }
             );
 
-            if(!rentedBook) throw new ConflictException("이미 반납함");
+            if(!rentedBook) throw new ConflictException("없는 책");
 
             rentedBook.isAvailable = true;
             await manager.save(BookEntity, rentedBook);

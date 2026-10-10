@@ -94,6 +94,19 @@ export class BookService {
             description: body.description?.trim(),
             categoryId: body.categoryId.toString(),
         });
-        return BookResponseDto.from(await this.bookRepository.save(book));
+        const savedBook = await this.bookRepository.save(book);
+
+        
+        const bookToShow = await this.bookRepository.findOne({
+            where: {
+                bookId:savedBook.bookId
+            },
+            relations: {
+                category: true,
+            },
+        });
+        if(!bookToShow) throw new NotFoundException("책 생성 실패");
+
+        return BookResponseDto.from(bookToShow);
     }
 }
