@@ -1,13 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import type { Movie } from "../../types/movie";
-import { cn } from "../../utils/cn";
+import { BookmarkButton } from "./bookmark-button";
 
 interface MovieCardProps {
   movie: Movie;
-  onToggleBookmark: (movieId: number) => void;
 }
 
-export function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
+export function MovieCard({ movie }: MovieCardProps) {
   const detailLink = {
     to: "/movies/$movieId",
     params: { movieId: String(movie.id) },
@@ -24,34 +23,11 @@ export function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
           />
         </Link>
 
-        <button
-          type="button"
-          className={cn(
-            "absolute top-2.5 right-2.5 flex size-[34px] items-center justify-center rounded-lg border",
-            movie.isBookmarked
-              ? "border-primary bg-primary"
-              : "border-white bg-ink",
-          )}
-          aria-pressed={movie.isBookmarked}
-          aria-label={
-            movie.isBookmarked
-              ? `${movie.title} 북마크 해제`
-              : `${movie.title} 북마크 추가`
-          }
-          onClick={() => onToggleBookmark(movie.id)}
-        >
-          {/* 북마크 여부 */}
-          <img
-            src={
-              movie.isBookmarked
-                ? "/icons/bookmark.svg"
-                : "/icons/bookmark-outline.svg"
-            }
-            alt=""
-            width={24}
-            height={24}
-          />
-        </button>
+        <BookmarkButton
+          movieId={movie.id}
+          movieTitle={movie.title}
+          className="absolute top-2.5 right-2.5"
+        />
       </div>
 
       <h2 className="pt-[5px] text-sm font-extrabold">
