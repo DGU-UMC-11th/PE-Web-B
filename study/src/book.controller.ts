@@ -1,5 +1,5 @@
 // src/book.controller.ts
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { BookService } from './book.service';
 import { Body, Post } from '@nestjs/common';
 import { BookResponseDto, CreateBookDto } from './book.dto';
@@ -11,8 +11,10 @@ export class BookController {
 
   // HTTP GET 방식으로 /books 요청이 들어왔을 때 실행되는 핸들러
   @Get()
-  async getBooks(): Promise<BookResponseDto[]> {
-    return await this.bookService.getAllBooks();
+  async getBooks(
+    @Query('keyword') keyword?: string,
+  ): Promise<BookResponseDto[]> {
+    return await this.bookService.getAllBooks(keyword);
   }
 
   @Post()
