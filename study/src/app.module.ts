@@ -1,12 +1,11 @@
 // src/app.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { databaseProviders } from './database.provider';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { BookController } from './book.controller';
-import { BookService } from './book.service';
-import { BookRepository } from './book.repository';
+import { BookModule } from './book.module';
 import { RentalController } from './rental.controller';
 import { RentalService } from './rental.service';
 import { RentalRepository } from './rental.repository';
@@ -16,17 +15,26 @@ import { RentalRepository } from './rental.repository';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): TypeOrmModuleOptions => ({
+        type: 'mysql',
+        host: configService.getOrThrow<string>('DB_HOST'),
+        port: Number(configService.get('DB_PORT', 3306)),
+        username: configService.getOrThrow<string>('DB_USER'),
+        password: configService.getOrThrow<string>('DB_PASSWORD'),
+        database: configService.getOrThrow<string>('DB_NAME'),
+        autoLoadEntities: true,
+        synchronize: false,
+        bigNumberStrings: false,
+      }),
+    }),
+    BookModule,
   ],
-  controllers: [
-    AppController,
-    BookController, // 추가!
-    RentalController,
-  ],
+  controllers: [AppController, RentalController],
   providers: [
     ...databaseProviders,
     AppService,
-    BookService, // 추가!
-    BookRepository, // 추가
     RentalService,
     RentalRepository,
   ],
