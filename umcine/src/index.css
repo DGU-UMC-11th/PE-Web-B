@@ -1,8 +1,4 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import "tailwindcss";
 
 body {
   margin: 0;
@@ -19,10 +15,8 @@ body {
   flex-direction: column;
 }
 
-button {
-  font-family: inherit;
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0;
+@layer base {
+  button {
+    cursor: pointer;
+  }
 }
