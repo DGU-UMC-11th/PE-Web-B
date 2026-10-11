@@ -1,3 +1,4 @@
+import { BookmarkButton } from "../../components/bookmark-button";
 import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { movies } from "../../data/movies";
@@ -18,12 +19,11 @@ export function MovieDetailPage() {
     );
   }
 
-  // 다른 영화로 이동하면 key가 바뀌어 즐겨찾기·평점 상태가 새로 시작돼요.
+  // 다른 영화로 이동하면 key가 바뀌어 평점·후기 상태가 새로 시작돼요.
   return <MovieDetail key={movie.id} movie={movie} />;
 }
 
 function MovieDetail({ movie }: { movie: Movie }) {
-  const [isBookmarked, setIsBookmarked] = useState(movie.isBookmarked);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
 
@@ -70,22 +70,7 @@ function MovieDetail({ movie }: { movie: Movie }) {
           <div className="min-w-0">
             <h2 className="m-0 text-lg font-bold tracking-[-0.5px]">{movie.tagline}</h2>
             <p className="mt-3 mb-0 text-[13px] leading-6 text-gray-600">{movie.overview}</p>
-            <button
-              type="button"
-              className={cn(
-                "mt-4 inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-white",
-                isBookmarked ? "bg-blue-800" : "bg-blue-600 hover:bg-blue-700",
-              )}
-              aria-pressed={isBookmarked}
-              onClick={() => setIsBookmarked((current) => !current)}
-            >
-              <img
-                className="size-4 invert"
-                src={isBookmarked ? "/icons/bookmark.svg" : "/icons/bookmark-outline.svg"}
-                alt=""
-              />
-              {isBookmarked ? "즐겨찾기됨" : "즐겨찾기"}
-            </button>
+            <BookmarkButton movieId={movie.id} title={movie.title} className="mt-4" />
           </div>
         </div>
 
