@@ -1,3 +1,4 @@
+import { BookmarkButton } from "../../components/bookmark-button";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState, type SubmitEvent } from "react";
 import { movies } from "../../data/movies";
@@ -114,6 +115,7 @@ export function SearchPage() {
                 <p className="mt-2 mb-0 line-clamp-2 text-[13px] leading-5 text-gray-600">
                   {movie.overview}
                 </p>
+                <BookmarkButton movieId={movie.id} title={movie.title} className="mt-2 w-fit" />
                 <Link
                   to="/movies/$movieId"
                   params={{ movieId: String(movie.id) }}
