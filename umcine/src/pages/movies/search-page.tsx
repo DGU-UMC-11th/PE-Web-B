@@ -1,5 +1,6 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { BookmarkButton } from "../../components/bookmark-button.tsx";
 import { searchMovies } from "../../data/search-movies.ts";
 
 export default function SearchPage() {
@@ -135,6 +136,7 @@ export default function SearchPage() {
                           className="size-3.5 [filter:invert(34%)_sepia(87%)_saturate(2250%)_hue-rotate(210deg)_brightness(97%)_contrast(92%)]"
                         />
                       </Link>
+                      <BookmarkButton movieId={movie.id} />
                     </div>
                   </article>
                 ))}
