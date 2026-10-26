@@ -1,7 +1,6 @@
 import { Outlet, createRootRoute } from '@tanstack/react-router'
 import Header from '../components/layout/header'
 import Footer from '../components/layout/footer'
-import { MovieProvider } from '../contexts/movie-context'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -10,12 +9,10 @@ export const Route = createRootRoute({
 
 function RootComponent() {
     return (
-        <MovieProvider>
             <div className="flex min-h-screen flex-col">
                 <Header />
                 <Outlet />
                 <Footer />
             </div>
-        </MovieProvider>
     )
 }
