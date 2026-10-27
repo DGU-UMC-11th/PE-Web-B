@@ -1,5 +1,17 @@
-export function LoadingMessage() {
+/*export function LoadingMessage() {
     return <p className="py-16 text-center text-gray-500">불러오는 중…</p>;
+}*/
+export function LoadingMessage() {
+    return (
+        <div className="flex items-center justify-center gap-2 py-16 text-gray-500">
+            <p>불러오는 중</p>
+            <span className="flex gap-1" aria-hidden="true">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" />
+            </span>
+        </div>
+    );
 }
 
 interface ErrorMessageProps {

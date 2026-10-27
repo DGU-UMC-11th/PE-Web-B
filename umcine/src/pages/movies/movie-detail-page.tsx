@@ -15,7 +15,7 @@ export function MovieDetailPage() {
     const parsedMovieId = Number(movieId);
     const isValidId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
     const { data: movie, isPending, error, isFetching, refetch } = useQuery({
-        queryKey: ["movie", parsedMovieId],
+        queryKey: ["movie", parsedMovieId], //검색키. movie, ID
         queryFn: () => getMovieDetail(parsedMovieId),
         select: toMovieDetail,
         enabled: isValidId,
