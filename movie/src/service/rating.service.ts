@@ -22,7 +22,7 @@ export class RatingService {
         }
 
         page = Math.max(page, 0); //기본값 설정. 0, 1
-        size = Math.max(size, 1);
+        size = Math.min(Math.max(size, 1),100); //최대 100개 조회
 
         const ratings = await this.ratingRepository.find({
             where: { member: { memberId } },
