@@ -1,8 +1,16 @@
 import { BookmarkButton } from "../../components/bookmark-button";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState, type SubmitEvent } from "react";
-import { movies } from "../../data/movies";
+import { useEffect, useState, type SubmitEvent } from "react";
+import { searchMovies } from "../../api/movies/search-movies";
+import { MoviePoster } from "../../components/movies/movie-poster";
+import type { TmdbMovieListItem } from "../../api/movies/models";
+import { StatusMessage } from "../../components/status-message";
 import { cn } from "../../utils/cn";
+import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
+
+type SearchResult =
+  | { query: string; status: "success"; movies: TmdbMovieListItem[]; totalResults: number }
+  | { query: string; status: "error" };
 
 const containerClass =
   "mx-auto w-full max-w-[1440px] flex-1 px-4 sm:px-6 md:px-8 xl:px-20";
@@ -19,14 +27,37 @@ export function SearchPage() {
     setSearchText(query ?? "");
   }
 
-  const normalizedQuery = query?.trim().toLowerCase() ?? "";
-  const searchResults = normalizedQuery
-    ? movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-    : [];
+  const normalizedQuery = query?.trim() ?? "";
+  const [result, setResult] = useState<SearchResult | null>(null);
+
+  useEffect(() => {
+    // 빈 검색어는 요청하지 않아요.
+    if (!normalizedQuery) return;
+
+    let ignore = false;
+
+    searchMovies({ query: normalizedQuery })
+      .then((response) => {
+        if (ignore) return;
+        setResult({
+          query: normalizedQuery,
+          status: "success",
+          movies: response.results,
+          totalResults: response.total_results,
+        });
+      })
+      .catch(() => {
+        if (!ignore) setResult({ query: normalizedQuery, status: "error" });
+      });
+
+    // 검색어가 바뀌면 이전 요청의 늦은 응답이 현재 결과를 덮어쓰지 않게 해요.
+    return () => {
+      ignore = true;
+    };
+  }, [normalizedQuery]);
+
+  // 저장된 결과가 현재 검색어의 결과가 아니면 아직 로딩 중이에요.
+  const isLoading = result?.query !== normalizedQuery;
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -86,48 +117,56 @@ export function SearchPage() {
       </h1>
       {searchForm}
 
-      <div className="mt-6 mb-4 flex items-baseline gap-2">
-        <h2 className="m-0 text-base font-semibold">‘{query}’ 검색 결과</h2>
-        <p className="m-0 text-sm text-gray-500">영화 {searchResults.length}편</p>
-      </div>
-
-      {searchResults.length === 0 ? (
-        <p className="py-20 text-center text-sm text-gray-500">검색 결과가 없어요.</p>
+      {isLoading ? (
+        <StatusMessage message="검색 결과를 불러오는 중이에요." />
+      ) : result.status === "error" ? (
+        <StatusMessage message="검색 결과를 불러오지 못했어요." />
       ) : (
-        <ul className="m-0 grid list-none grid-cols-1 gap-x-8 gap-y-6 p-0 lg:grid-cols-2">
-          {searchResults.map((movie) => (
-            <li key={movie.id} className="flex gap-4">
-              <Link
-                to="/movies/$movieId"
-                params={{ movieId: String(movie.id) }}
-                className="shrink-0"
-              >
-                <img
-                  className="block h-[136px] w-24 rounded-lg object-cover"
-                  src={movie.posterPath}
-                  alt={`${movie.title} 포스터`}
-                />
-              </Link>
-              <div className="flex min-w-0 flex-col">
-                <h3 className="m-0 truncate text-base font-semibold">{movie.title}</h3>
-                <p className="m-0 text-xs text-gray-500">{movie.originalTitle}</p>
-                <p className="mt-1 mb-0 text-xs text-gray-400">{movie.releaseDate}</p>
-                <p className="mt-2 mb-0 line-clamp-2 text-[13px] leading-5 text-gray-600">
-                  {movie.overview}
-                </p>
-                <BookmarkButton movieId={movie.id} title={movie.title} className="mt-2 w-fit" />
-                <Link
-                  to="/movies/$movieId"
-                  params={{ movieId: String(movie.id) }}
-                  className="mt-auto inline-flex items-center gap-1 pt-2 text-[13px] font-semibold text-blue-600 no-underline hover:underline"
-                >
-                  상세 보기
-                  <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="mt-6 mb-4 flex items-baseline gap-2">
+            <h2 className="m-0 text-base font-semibold">‘{normalizedQuery}’ 검색 결과</h2>
+            <p className="m-0 text-sm text-gray-500">영화 {result.totalResults}편</p>
+          </div>
+
+          {result.movies.length === 0 ? (
+            <StatusMessage message="조건에 맞는 영화가 없어요." />
+          ) : (
+            <ul className="m-0 grid list-none grid-cols-1 gap-x-8 gap-y-6 p-0 lg:grid-cols-2">
+              {result.movies.map((movie) => (
+                <li key={movie.id} className="flex gap-4">
+                  <Link
+                    to="/movies/$movieId"
+                    params={{ movieId: String(movie.id) }}
+                    className="shrink-0"
+                  >
+                    <MoviePoster
+                      className="block h-[136px] w-24 rounded-lg"
+                      src={getTmdbPosterUrl(movie.poster_path)}
+                      alt={`${movie.title} 포스터`}
+                    />
+                  </Link>
+                  <div className="flex min-w-0 flex-col">
+                    <h3 className="m-0 truncate text-base font-semibold">{movie.title}</h3>
+                    <p className="m-0 text-xs text-gray-500">{movie.original_title}</p>
+                    <p className="mt-1 mb-0 text-xs text-gray-400">{movie.release_date}</p>
+                    <p className="mt-2 mb-0 line-clamp-2 text-[13px] leading-5 text-gray-600">
+                      {movie.overview}
+                    </p>
+                    <BookmarkButton movieId={movie.id} title={movie.title} className="mt-2 w-fit" />
+                    <Link
+                      to="/movies/$movieId"
+                      params={{ movieId: String(movie.id) }}
+                      className="mt-auto inline-flex items-center gap-1 pt-2 text-[13px] font-semibold text-blue-600 no-underline hover:underline"
+                    >
+                      상세 보기
+                      <span aria-hidden="true">→</span>
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </main>
   );
