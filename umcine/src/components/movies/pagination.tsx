@@ -1,5 +1,8 @@
 import { cn } from "../../utils/cn";
 
+// 한 번에 보여줄 페이지 번호 개수
+const PAGE_WINDOW = 5;
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -11,7 +14,13 @@ export default function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  // 현재 페이지가 가운데 오도록 하되, 양 끝에서는 범위를 벗어나지 않게 맞춰요.
+  const start = Math.max(
+    1,
+    Math.min(currentPage - Math.floor(PAGE_WINDOW / 2), totalPages - PAGE_WINDOW + 1),
+  );
+  const end = Math.min(totalPages, start + PAGE_WINDOW - 1);
+  const pages = Array.from({ length: Math.max(0, end - start + 1) }, (_, index) => start + index);
 
   const handlePrev = () => {
     if (currentPage > 1 && onPageChange) {
