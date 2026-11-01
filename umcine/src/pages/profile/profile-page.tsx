@@ -1,12 +1,11 @@
-import type { Movie } from "../../types/movie";
+import type { TmdbMovie } from "../../api/movies/models";
 import MovieCard from "../../components/movies/movie-card";
 import Pagination from "../../components/movies/pagination";
 
 interface ProfilePageProps {
   nickname: string;
   email: string;
-  bookmarkedMovies: Movie[];
-  onToggleBookmark: (id: number) => void;
+  bookmarkedMovies: TmdbMovie[];
   onNavigateEdit: () => void;
 }
 
@@ -14,7 +13,6 @@ export default function ProfilePage({
   nickname,
   email,
   bookmarkedMovies,
-  onToggleBookmark,
   onNavigateEdit,
 }: ProfilePageProps) {
   return (
@@ -60,11 +58,7 @@ export default function ProfilePage({
             <>
               <div className="grid grid-cols-2 gap-x-5 gap-y-7 min-[641px]:grid-cols-3 min-[901px]:grid-cols-4 min-[1201px]:grid-cols-5">
                 {bookmarkedMovies.map((movie) => (
-                  <MovieCard
-                    key={movie.id}
-                    movie={movie}
-                    onToggleBookmark={onToggleBookmark}
-                  />
+                  <MovieCard key={movie.id} movie={movie} />
                 ))}
               </div>
               <Pagination currentPage={1} totalPages={1} />
