@@ -6,7 +6,7 @@ interface BookmarkStore {
   toggleBookmark: (movieId: number) => void;
 }
 
-// 저장값은 개발자 도구에서 바뀔 수 있으므로 양의 정수 ID만 남긴다
+// 저장값은 개발자 도구에서 바뀔 수 있으므로 양의 정수 ID만 남김.
 function toValidMovieIds(value: unknown): number[] {
   if (!Array.isArray(value)) return [];
 
