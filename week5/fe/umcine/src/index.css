@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply m-0 min-w-[320px] bg-[#f6f7f9] font-sans text-[#191b1f] antialiased;
+  }
+  button, a, input, textarea {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600;
+  }
+  button { @apply cursor-pointer disabled:cursor-not-allowed; }
+}
