@@ -1,4 +1,5 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { BookmarkButton } from "../../components/movies/bookmark-button";
 import { movies } from "../../data/movies";
 
 const ratingScores = [1, 2, 3, 4, 5];
@@ -54,13 +55,7 @@ export function MovieDetailPage() {
         <section className="flex min-w-0 flex-1 flex-col items-start gap-3">
           <h2 className="text-[21px] font-bold tracking-[-0.63px]">{movie.tagline}</h2>
           <p className="text-sm leading-6 text-ink-secondary">{movie.overview}</p>
-          <button
-            type="button"
-            className="flex h-[42px] items-center gap-2 rounded-lg border border-white bg-primary px-4 text-sm font-extrabold text-white hover:bg-primary-hover"
-          >
-            <img src="/icons/bookmark-small.svg" alt="" width={16} height={16} />
-            즐겨찾기
-          </button>
+          <BookmarkButton movieId={movie.id} movieTitle={movie.title} variant="labeled" />
         </section>
 
         <aside className="flex w-[360px] shrink-0 flex-col gap-2 border-l border-line pb-[41px] pl-[30px]">
