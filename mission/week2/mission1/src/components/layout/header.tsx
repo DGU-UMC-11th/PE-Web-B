@@ -19,7 +19,7 @@ export function Header() {
             <Link to="/search" className="hover:text-ink">
               검색
             </Link>
-            {/* 아직 연결할 route가 없다 */}
+            {/* 아직 연결할 route가 없음 */}
             <span>내 정보</span>
           </nav>
         </div>
