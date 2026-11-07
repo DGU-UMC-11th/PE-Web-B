@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { movies as initialMovies } from "../../data/movies";
+import { movies } from "../../data/movies";
+import { useBookmarkStore } from "../../stores/bookmark-store";
 
 export default function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
   const navigate = useNavigate();
-  const [movies, setMovies] = useState(initialMovies);
   const movie = movies.find((m) => m.id === Number(movieId));
+  const isBookmarked = useBookmarkStore((state) =>
+    state.bookmarkedMovieIds.includes(Number(movieId)),
+  );
+  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
 
   const onBack = () => navigate({ to: "/" });
-  const onToggleBookmark = (id: number) => {
-    setMovies((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, isBookmarked: !m.isBookmarked } : m))
-    );
-  };
 
   const [rating, setRating] = useState<number>(0);
   const [review, setReview] = useState<string>("");
@@ -82,11 +81,11 @@ export default function MovieDetailPage() {
             <button
               type="button"
               className="mt-2 inline-flex items-center gap-2 self-start rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700"
-              onClick={() => onToggleBookmark(movie.id)}
+              onClick={() => toggleBookmark(movie.id)}
             >
               <img
                 src={
-                  movie.isBookmarked
+                  isBookmarked
                     ? "/movie-icons/bookmark.svg"
                     : "/movie-icons/bookmark-outline.svg"
                 }
