@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>간이 프론트 - 영화 평점 서비스 API 테스트</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        max-width: 640px;
+        margin: 40px auto;
+        padding: 0 16px;
+        color: #17191e;
+      }
+      section {
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e3e6eb;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      code {
+        color: #606774;
+        font-size: 13px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin: 10px 0;
+      }
+      input {
+        flex: 1;
+        height: 36px;
+        padding: 0 10px;
+        border: 1px solid #e3e6eb;
+        border-radius: 8px;
+      }
+      button {
+        height: 36px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      pre {
+        min-height: 20px;
+        margin: 0;
+        padding: 10px;
+        background: #f6f7f9;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>간이 프론트 : 영화 평점 서비스 API</h1>
+
+    <section>
+      <h2>1. 닉네임 중복 체크</h2>
+      <code>GET /members/nickname/{nickname}</code>
+      <div class="row">
+        <input id="nickname" value="수현" />
+        <button onclick="checkNickname()">중복 체크</button>
+      </div>
+      <pre id="nickname-result"></pre>
+    </section>
+
+    <section>
+      <h2>2. 이메일 중복 체크</h2>
+      <code>GET /members/email/{email}</code>
+      <div class="row">
+        <input id="email" value="noco@umc.com" />
+        <button onclick="checkEmail()">중복 체크</button>
+      </div>
+      <pre id="email-result"></pre>
+    </section>
+
+    <section>
+      <h2>3. 유저별 평점 조회</h2>
+      <code>GET /members/{memberId}/ratings</code>
+      <div class="row">
+        <input id="memberId" value="1" />
+        <button onclick="getRatings()">평점 조회</button>
+      </div>
+      <pre id="ratings-result"></pre>
+    </section>
+
+    <script>
+      // Spring이면 8080, NestJS면 3000
+      const API = "http://localhost:3000";
+
+      async function call(path, resultId) {
+        const out = document.getElementById(resultId);
+        out.innerText = "요청 중...";
+        try {
+          const res = await fetch(`${API}${path}`);
+          const data = await res.json();
+          out.innerText = `${res.status} ${res.statusText}\n${JSON.stringify(data, null, 2)}`;
+        } catch (e) {
+          // CORS 차단·서버 꺼짐 등 네트워크 단계 실패
+          out.innerText = `요청 실패: ${e.message}\n(개발자 도구 Console 확인)`;
+        }
+      }
+
+      function checkNickname() {
+        const v = document.getElementById("nickname").value;
+        call(`/members/nickname/${encodeURIComponent(v)}`, "nickname-result");
+      }
+
+      function checkEmail() {
+        const v = document.getElementById("email").value;
+        call(`/members/email/${encodeURIComponent(v)}`, "email-result");
+      }
+
+      function getRatings() {
+        const v = document.getElementById("memberId").value;
+        call(`/members/${encodeURIComponent(v)}/ratings`, "ratings-result");
+      }
+    </script>
+  </body>
+</html>
