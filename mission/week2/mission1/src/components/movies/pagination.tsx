@@ -1,17 +1,35 @@
 import { cn } from "../../utils/cn";
 
-const pageNumbers = [1, 2, 3, 4, 5];
+const VISIBLE_PAGE_COUNT = 5;
 
-const currentPage: number = 1;
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
 
-export function Pagination() {
+function getPageNumbers(currentPage: number, totalPages: number) {
+  const count = Math.min(VISIBLE_PAGE_COUNT, totalPages);
+  const start = Math.min(
+    Math.max(1, currentPage - Math.floor(VISIBLE_PAGE_COUNT / 2)),
+    totalPages - count + 1,
+  );
+  return Array.from({ length: count }, (_, index) => start + index);
+}
+
+export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
+  if (totalPages < 1) return null;
+
+  const pageNumbers = getPageNumbers(currentPage, totalPages);
+
   return (
     <nav className="flex items-center justify-center gap-3" aria-label="페이지 이동">
       <button
         type="button"
-        className="disabled:cursor-not-allowed"
+        className="disabled:cursor-not-allowed disabled:opacity-30"
         aria-label="이전 페이지"
-        disabled={currentPage === 1}
+        disabled={currentPage <= 1}
+        onClick={() => onPageChange(currentPage - 1)}
       >
         <img src="/icons/chevron-left.svg" alt="" width={24} height={24} />
       </button>
@@ -28,6 +46,7 @@ export function Pagination() {
                   : "text-ink-secondary hover:bg-line",
               )}
               aria-current={page === currentPage ? "page" : undefined}
+              onClick={() => onPageChange(page)}
             >
               {page}
             </button>
@@ -35,7 +54,13 @@ export function Pagination() {
         ))}
       </ul>
 
-      <button type="button" aria-label="다음 페이지">
+      <button
+        type="button"
+        className="disabled:cursor-not-allowed disabled:opacity-30"
+        aria-label="다음 페이지"
+        disabled={currentPage >= totalPages}
+        onClick={() => onPageChange(currentPage + 1)}
+      >
         <img src="/icons/chevron-right.svg" alt="" width={24} height={24} />
       </button>
     </nav>
