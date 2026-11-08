@@ -1,6 +1,8 @@
 todo.md
 .tanstack/*
 
+.env.local
+
 # Logs
 logs
 *.log

@@ -2,7 +2,6 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { movies } from "../data/movies";
 
 interface BookmarkStore {
     bookmarkedMovieIds: number[];
@@ -39,8 +38,7 @@ export const useBookmarkStore = create<BookmarkStore>()(
                                 ? ids.filter(
                                     (id): id is number =>
                                         typeof id === "number"
-                                        && Number.isInteger(id)
-                                        && (1 <= id && id <= movies.length),
+                                        && Number.isInteger(id),
                                 ) //리턴값 number[]
                                 : [];
                 const newArray = Array.from(new Set(idData));

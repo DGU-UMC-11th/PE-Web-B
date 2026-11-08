@@ -1,13 +1,22 @@
-export interface Movie {
+export interface MovieItem {
     id: number;
     title: string;
     originalTitle: string;
     releaseDate: string;
-    posterPath: string;
-    backdropPath: string;
-    genres: string[];
-    runtime: string;
-    tagline: string;
     overview: string;
-    isBookmarked: boolean;
+    posterUrl: string | undefined;
+}
+
+export interface MovieDetail extends MovieItem {
+    tagline: string;
+    backdropUrl: string | undefined;
+    genreText: string;
+    runtimeText: string;
+}
+
+export interface MoviePage {
+    movies: MovieItem[];
+    page: number;
+    totalPages: number;
+    totalResults: number;
 }

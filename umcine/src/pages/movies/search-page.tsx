@@ -1,22 +1,35 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useContext, useState, type SubmitEvent } from "react";
-import { MovieContext } from "../../contexts/movie-context";
+import { useState, type SubmitEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { searchMovies } from "../../api/movies/search-movies";
+import { ErrorMessage, LoadingMessage } from "../../components/query-status";
+import { PageSelector } from "../../components/page-bar/page-bar-selector";
+import Poster from "../../components/movies/poster";
 import { cn } from "../../utils/cn";
+import { toMoviePage } from "../../utils/movies/movie-adapter";
 
 export function SearchPage() {
-  const { query } = useSearch({ from: "/search" });
+  const { query, page = 1 } = useSearch({ from: "/search" });
   const navigate = useNavigate({ from: "/search" });
-  const { movies } = useContext(MovieContext);
   const [searchText, setSearchText] = useState(query ?? "");
+  const [prevQuery, setPrevQuery] = useState(query);
+  // URL의 query가 바뀌면(뒤로 가기 등) 입력창도 맞춤
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setSearchText(query ?? "");
+  }
 
-  const normalizedQuery = query?.trim().toLowerCase() ?? "";
-  const searchResults = normalizedQuery
-    ? movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-    : [];
+  const normalizedQuery = query?.trim() ?? "";
+  const hasQuery = !!normalizedQuery;
+  const { data, isPending, isError, isFetching, refetch } = useQuery({
+    queryKey: ["search", normalizedQuery, page],
+    queryFn: () => searchMovies({ query: normalizedQuery, page }),
+    select: toMoviePage,
+    enabled: hasQuery,
+    // 같은 검색어의 페이지 이동일 때만 이전 결과 유지
+    placeholderData: (prev, prevQuery) =>
+      prevQuery?.queryKey[1] === normalizedQuery ? prev : undefined,
+  });
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,8 +38,6 @@ export function SearchPage() {
       search: nextQuery ? { query: nextQuery } : {},
     });
   }
-
-  const hasQuery = !!normalizedQuery;
 
   return (
     <main className={cn("mx-auto w-full max-w-[1170px] flex-1 py-8", !hasQuery && "pt-32")}>
@@ -47,7 +58,7 @@ export function SearchPage() {
           aria-label="검색어"
           placeholder="예: 스파이더맨"
           value={searchText}
-          onChange={(event) => setSearchText(event.target.value ?? "")}
+          onChange={(event) => setSearchText(event.target.value)}
           className="flex-1 bg-transparent text-sm outline-none"
         />
         {hasQuery && (
@@ -69,36 +80,53 @@ export function SearchPage() {
         <>
           <div className="mt-6 flex items-center justify-between border-b border-gray-200 pb-3">
             <h2 className="font-bold">‘{query}’ 검색 결과</h2>
-            <p className="text-xs text-gray-400">영화 {searchResults.length}편 · 1페이지</p>
+            <p className="text-xs text-gray-400">영화 {data?.totalResults ?? 0}편 · {page}페이지</p>
           </div>
-          {searchResults.length === 0 ? (
+          {isPending ? (
+            <LoadingMessage />
+          ) : isError ? (
+            <ErrorMessage
+              message="검색 결과를 불러오지 못했어요."
+              onRetry={() => refetch()}
+              isRetrying={isFetching}
+            />
+          ) : data.movies.length === 0 ? (
             <p className="py-16 text-center text-gray-500">검색 결과가 없어요.</p>
           ) : (
-            <ul className="grid gap-x-8 md:grid-cols-2">
-              {searchResults.map((movie) => (
-                <li key={movie.id} className="flex gap-4 border-b border-gray-200 py-5">
-                  <img
-                    src={movie.posterPath}
-                    alt={`${movie.title} 포스터`}
-                    className="h-[174px] w-[115px] shrink-0 rounded-md object-cover"
-                  />
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <h3 className="text-lg font-bold">{movie.title}</h3>
-                    <p className="text-xs text-gray-400">
-                      {movie.originalTitle} <span className="ml-1">{movie.releaseDate}</span>
-                    </p>
-                    <p className="line-clamp-2 text-sm text-gray-600">{movie.overview}</p>
-                    <Link
-                      to="/movies/$movieId"
-                      params={{ movieId: String(movie.id) }}
-                      className="mt-auto flex items-center gap-1 text-xs font-bold text-brand"
-                    >
-                      상세 보기 <span aria-hidden className="size-4 bg-brand [mask:url(/icons/arrow-right.svg)_center/contain_no-repeat]" />
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="grid gap-x-8 md:grid-cols-2">
+                {data.movies.map((movie) => (
+                  <li key={movie.id} className="flex gap-4 border-b border-gray-200 py-5">
+                    <Poster
+                      src={movie.posterUrl}
+                      alt={`${movie.title} 포스터`}
+                      className="h-[174px] w-[115px] shrink-0 rounded-md object-cover"
+                    />
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <h3 className="text-lg font-bold">{movie.title}</h3>
+                      <p className="text-xs text-gray-400">
+                        {movie.originalTitle} <span className="ml-1">{movie.releaseDate}</span>
+                      </p>
+                      <p className="line-clamp-2 text-sm text-gray-600">{movie.overview}</p>
+                      <Link
+                        to="/movies/$movieId"
+                        params={{ movieId: String(movie.id) }}
+                        className="mt-auto flex items-center gap-1 text-xs font-bold text-brand"
+                      >
+                        상세 보기 <span aria-hidden className="size-4 bg-brand [mask:url(/icons/arrow-right.svg)_center/contain_no-repeat]" />
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <PageSelector
+                page={page}
+                totalPages={data.totalPages}
+                onChange={(next) =>
+                  navigate({ search: (prev) => ({ ...prev, page: next > 1 ? next : undefined }) })
+                }
+              />
+            </>
           )}
         </>
       )}
