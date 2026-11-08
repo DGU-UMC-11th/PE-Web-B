@@ -1,6 +1,7 @@
 import { BookmarkButton } from "../../components/bookmark-button";
 import { Link, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import { MoviePoster } from "../../components/movies/movie-poster";
 import { StatusMessage } from "../../components/status-message";
@@ -8,10 +9,6 @@ import type { TmdbMovieDetail } from "../../api/movies/models";
 import { cn } from "../../utils/cn";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
 import { getTmdbBackdropUrl, getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
-
-type MovieDetailResult =
-  | { movieId: number; status: "success"; movie: TmdbMovieDetail }
-  | { movieId: number; status: "error"; message: string };
 
 // 148 → "2시간 28분"
 function formatRuntime(runtime: number | null) {
@@ -28,47 +25,34 @@ export function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
   const parsedMovieId = Number(movieId);
   const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
-  const [result, setResult] = useState<MovieDetailResult | null>(null);
 
-  useEffect(() => {
-    // 올바르지 않은 영화 번호는 요청하지 않아요.
-    if (!isValidMovieId) return;
-
-    let ignore = false;
-
-    async function loadMovieDetail() {
-      try {
-        const response = await getMovieDetail(parsedMovieId);
-        if (!ignore) setResult({ movieId: parsedMovieId, status: "success", movie: response });
-      } catch (error) {
-        if (!ignore) {
-          setResult({ movieId: parsedMovieId, status: "error", message: getMovieDetailErrorMessage(error) });
-        }
-      }
-    }
-
-    loadMovieDetail();
-
-    return () => {
-      ignore = true;
-    };
-  }, [isValidMovieId, parsedMovieId]);
+  // 영화 ID를 key에 넣어서 영화마다 캐시를 따로 저장해요. 상세는 30초만 fresh로 둬요.
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", parsedMovieId],
+    queryFn: () => getMovieDetail(parsedMovieId),
+    enabled: isValidMovieId,
+    staleTime: 30 * 1000,
+  });
 
   if (!isValidMovieId) {
     return <StatusMessage className={cn(containerClass, "flex-1 py-24")} message="올바르지 않은 영화 번호예요." />;
   }
 
-  // 저장된 결과가 현재 영화의 결과가 아니면 아직 로딩 중이에요.
-  if (result?.movieId !== parsedMovieId) {
+  if (movieDetailQuery.isPending) {
     return <StatusMessage className={cn(containerClass, "flex-1 py-24")} message="영화 정보를 불러오는 중이에요." />;
   }
 
-  if (result.status === "error") {
-    return <StatusMessage className={cn(containerClass, "flex-1 py-24")} message={result.message} />;
+  if (movieDetailQuery.isError) {
+    return (
+      <StatusMessage
+        className={cn(containerClass, "flex-1 py-24")}
+        message={getMovieDetailErrorMessage(movieDetailQuery.error)}
+      />
+    );
   }
 
   // 다른 영화로 이동하면 key가 바뀌어 평점·후기 상태가 새로 시작돼요.
-  return <MovieDetail key={result.movie.id} movie={result.movie} />;
+  return <MovieDetail key={movieDetailQuery.data.id} movie={movieDetailQuery.data} />;
 }
 
 function MovieDetail({ movie }: { movie: TmdbMovieDetail }) {
