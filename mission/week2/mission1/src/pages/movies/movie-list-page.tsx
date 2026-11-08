@@ -1,45 +1,48 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { getMovies } from "../../api/movies/get-movies";
-import type { TmdbMovieListItem } from "../../api/movies/models";
 import { MovieGrid } from "../../components/movies/movie-grid";
 import { Pagination } from "../../components/movies/pagination";
 import { StatusMessage } from "../../components/movies/status-message";
 
+// TMDB는 목록 API에서 500페이지까지만 조회할 수 있어요.
+const TMDB_MAX_PAGE = 500;
+
 export function MovieListPage() {
-  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    let ignore = false;
-    async function loadMovies() {
-      setIsLoading(true);
-      setErrorMessage(null);
+  const moviesQuery = useQuery({
+    queryKey: ["movies", "list", { page }],
+    queryFn: () => getMovies({ page }),
+  });
 
-      try {
-        const response = await getMovies({ page: 1 });
-        if (!ignore) setMovies(response.results);
-      } catch {
-        if (!ignore) setErrorMessage("영화 목록을 불러오지 못했어요.");
-      } finally {
-        if (!ignore) setIsLoading(false);
-      }
-    }
+  const movies = moviesQuery.data?.results ?? [];
+  const totalPages = Math.min(moviesQuery.data?.total_pages ?? 0, TMDB_MAX_PAGE);
 
-    loadMovies();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+    window.scrollTo({ top: 0 });
+  }
 
   function renderContent() {
-    if (isLoading) return <StatusMessage>영화 목록을 불러오는 중이에요.</StatusMessage>;
-    if (errorMessage) return <StatusMessage tone="error">{errorMessage}</StatusMessage>;
+    if (moviesQuery.isPending) {
+      return <StatusMessage>영화 목록을 불러오는 중이에요.</StatusMessage>;
+    }
+    if (moviesQuery.isError) {
+      return <StatusMessage tone="error">영화 목록을 불러오지 못했어요.</StatusMessage>;
+    }
+    if (movies.length === 0) {
+      return <StatusMessage>표시할 영화가 없어요.</StatusMessage>;
+    }
+
     return (
       <>
         <MovieGrid movies={movies} />
-        {movies.length > 0 && <Pagination />}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </>
     );
   }

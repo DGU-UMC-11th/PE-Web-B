@@ -1,7 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { isHTTPError } from "ky";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
-import type { TmdbMovieDetail } from "../../api/movies/models";
 import { BookmarkButton } from "../../components/movies/bookmark-button";
 import { MovieImage } from "../../components/movies/movie-image";
 import { formatReleaseDate, formatRuntime } from "../../utils/movies/format-movie";
@@ -19,50 +19,30 @@ function DetailStatus({ children }: { children: string }) {
 }
 
 export function MovieDetailPage() {
-  const { movieId } = useParams({ from: "/movies/$movieId" });
-  const parsedMovieId = Number(movieId);
-  const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
+  const { movieId: movieIdParam } = useParams({ from: "/movies/$movieId" });
+  const movieId = Number(movieIdParam);
+  const isValidMovieId = Number.isInteger(movieId) && movieId > 0;
 
-  const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(isValidMovieId);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", movieId],
+    queryFn: () => getMovieDetail(movieId),
+    enabled: isValidMovieId,
+    staleTime: 30 * 1000,
+    // 없는 영화(404)는 다시 요청해도 결과가 같으므로 재시도하지 않아요.
+    retry: (failureCount, error) =>
+      !(isHTTPError(error) && error.response.status === 404) && failureCount < 3,
+  });
 
-  useEffect(() => {
-    let ignore = false;
-
-    setMovie(null);
-    setErrorMessage(null);
-
-    if (!isValidMovieId) {
-      setIsLoading(false);
-      return;
-    }
-
-    async function loadMovie() {
-      setIsLoading(true);
-
-      try {
-        const response = await getMovieDetail(parsedMovieId);
-        if (!ignore) setMovie(response);
-      } catch (error) {
-        if (!ignore) setErrorMessage(getMovieDetailErrorMessage(error));
-      } finally {
-        if (!ignore) setIsLoading(false);
-      }
-    }
-
-    loadMovie();
-
-    return () => {
-      ignore = true;
-    };
-  }, [parsedMovieId, isValidMovieId]);
-
+  // enabled가 false면 isPending이 계속 참이라, 잘못된 번호를 로딩보다 먼저 처리해요.
   if (!isValidMovieId) return <DetailStatus>올바르지 않은 영화 번호예요.</DetailStatus>;
-  if (isLoading) return <DetailStatus>영화 정보를 불러오는 중이에요.</DetailStatus>;
-  if (errorMessage) return <DetailStatus>{errorMessage}</DetailStatus>;
-  if (!movie) return <DetailStatus>영화를 찾을 수 없어요.</DetailStatus>;
+  if (movieDetailQuery.isPending) {
+    return <DetailStatus>영화 정보를 불러오는 중이에요.</DetailStatus>;
+  }
+  if (movieDetailQuery.isError) {
+    return <DetailStatus>{getMovieDetailErrorMessage(movieDetailQuery.error)}</DetailStatus>;
+  }
 
+  const movie = movieDetailQuery.data;
   const genreNames = movie.genres.map((genre) => genre.name).join(", ");
 
   return (
