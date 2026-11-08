@@ -1,5 +1,7 @@
 // src/service/member.service.ts
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
+import * as bcrypt from "bcrypt";
+import { CreateMemberDto } from "../dto/create-member.dto.js";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { MemberEntity } from "../entity/member.entity.js";
@@ -32,5 +34,24 @@ export class MemberService {
 
         const exists = await this.memberRepository.exists({ where: { email } });
         return { available: !exists };
+    }
+
+    async signUp(dto: CreateMemberDto) {
+        if (await this.memberRepository.exists({ where: { email: dto.email } })) {
+            throw new ConflictException({ code: "MEMBER4091", message: "이미 사용 중인 이메일입니다." });
+        }
+        if (await this.memberRepository.exists({ where: { nickname: dto.nickname } })) {
+            throw new ConflictException({ code: "MEMBER4092", message: "이미 사용 중인 닉네임입니다." });
+        }
+
+        const saved = await this.memberRepository.save(
+            this.memberRepository.create({
+                email: dto.email,
+                password: await bcrypt.hash(dto.password, 10),
+                nickname: dto.nickname,
+            }),
+        );
+
+        return { memberId: saved.memberId, email: saved.email, nickname: saved.nickname };
     }
 }
