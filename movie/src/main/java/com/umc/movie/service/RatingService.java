@@ -57,12 +57,7 @@ public class RatingService {
 
     @Transactional
     public void update(Long ratingId, Long memberId, UpdateRatingRequest request) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
-
-        Rating rating = ratingRespository.findById(ratingId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 평점입니다."));
-
+        Rating rating = findOwnedRating(ratingId, memberId);
         rating.update(request.score(), request.comment());
     }
 
