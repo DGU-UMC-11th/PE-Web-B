@@ -22,7 +22,7 @@ export function SearchPage() {
   const normalizedQuery = query?.trim() ?? "";
   const hasQuery = !!normalizedQuery;
   const { data, isPending, isError, isFetching, refetch } = useQuery({
-    queryKey: ["search", normalizedQuery, page],
+    queryKey: ["movies", "search", {query: normalizedQuery, page: page}],
     queryFn: () => searchMovies({ query: normalizedQuery, page }),
     select: toMoviePage,
     enabled: hasQuery,
