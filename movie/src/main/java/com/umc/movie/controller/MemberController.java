@@ -1,14 +1,12 @@
 package com.umc.movie.controller;
 
-import com.umc.movie.dto.EmailCheckResponse;
-import com.umc.movie.dto.NicknameCheckResponse;
+import com.umc.movie.dto.*;
 import com.umc.movie.service.MemberService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -30,5 +28,14 @@ public class MemberController {
     public EmailCheckResponse checkEmail(@PathVariable String email) {
         // 이메일 형식 유효성은 다음 기회에...
         return memberService.checkEmail(email);
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<MemberResponse>> signUp(
+            @Valid @RequestBody SignUpRequest request
+            ) {
+        MemberResponse response = memberService.signUp(request);
+        return ResponseEntity.status(201)
+                .body(ApiResponse.created("회원가입에 성공했습니다.", response));
     }
 }
