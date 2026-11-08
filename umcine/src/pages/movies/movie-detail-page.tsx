@@ -1,16 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { movies } from "../../data/movies";
+import { getMovieDetail } from "../../api/movies/get-movie-detail";
+import type { TmdbMovieDetail } from "../../api/movies/models";
 import { useBookmarkStore } from "../../stores/bookmark-store";
+import { formatReleaseDate, formatRuntime } from "../../utils/movies/format-movie";
+import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
+import { getTmdbBackdropUrl, getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export default function MovieDetailPage() {
   const { movieId } = useParams({ from: "/movies/$movieId" });
   const navigate = useNavigate();
-  const movie = movies.find((m) => m.id === Number(movieId));
+  const parsedMovieId = Number(movieId);
+  const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
+
+  const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(Number(movieId)),
+    state.bookmarkedMovieIds.includes(parsedMovieId),
   );
   const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+
+  useEffect(() => {
+    // 숫자가 아니거나 0 이하인 id는 요청하지 않아요.
+    if (!isValidMovieId) return;
+
+    let ignore = false;
+
+    async function loadMovie() {
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      try {
+        const response = await getMovieDetail(parsedMovieId);
+        if (!ignore) setMovie(response);
+      } catch (error) {
+        if (!ignore) setErrorMessage(getMovieDetailErrorMessage(error));
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    }
+
+    loadMovie();
+
+    return () => {
+      ignore = true;
+    };
+  }, [parsedMovieId, isValidMovieId]);
 
   const onBack = () => navigate({ to: "/" });
 
@@ -26,23 +63,41 @@ export default function MovieDetailPage() {
     alert("평점이 저장되었습니다!");
   };
 
-  if (!movie) {
+  if (!isValidMovieId || isLoading || errorMessage || !movie) {
+    const message = !isValidMovieId
+      ? "영화를 찾을 수 없어요."
+      : isLoading
+        ? "영화 정보를 불러오는 중이에요..."
+        : (errorMessage ?? "영화를 찾을 수 없어요.");
+
     return (
       <div className="mx-auto w-full max-w-[1360px] px-4 py-20 sm:px-6 lg:px-10">
-        영화를 찾을 수 없어요.
+        {message}
       </div>
     );
   }
+
+  const backdropUrl = getTmdbBackdropUrl(movie.backdrop_path);
+  const posterUrl = getTmdbPosterUrl(movie.poster_path);
+  const movieMeta = [
+    formatReleaseDate(movie.release_date),
+    movie.genres.map((genre) => genre.name).join(" · "),
+    formatRuntime(movie.runtime),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="w-full">
       {/* Backdrop Banner */}
       <div className="relative h-[380px] w-full overflow-hidden bg-gray-900">
-        <img
-          src={movie.backdropPath}
-          alt=""
-          className="size-full object-cover opacity-65"
-        />
+        {backdropUrl && (
+          <img
+            src={backdropUrl}
+            alt=""
+            className="size-full object-cover opacity-65"
+          />
+        )}
         <div className="absolute inset-0 flex items-end bg-linear-to-b from-gray-900/40 to-gray-900/85">
           <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-2 px-10 pb-10">
             <button type="button" className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-gray-200 transition-colors hover:text-white" onClick={onBack}>
@@ -54,10 +109,8 @@ export default function MovieDetailPage() {
               영화 목록
             </button>
             <h1 className="text-[34px] font-extrabold tracking-[-0.5px] text-white">{movie.title}</h1>
-            <p className="text-sm text-gray-300">{movie.originalTitle}</p>
-            <p className="mt-1 text-sm text-gray-400">
-              {movie.releaseDate} · {movie.genres.join(" · ")} · {movie.runtime}
-            </p>
+            <p className="text-sm text-gray-300">{movie.original_title}</p>
+            <p className="mt-1 text-sm text-gray-400">{movieMeta}</p>
           </div>
         </div>
       </div>
@@ -66,22 +119,33 @@ export default function MovieDetailPage() {
       <div className="mx-auto max-w-[1360px] px-10 pt-10 pb-20">
         <div className="grid grid-cols-1 items-start gap-10 min-[769px]:grid-cols-[200px_1fr] min-[1025px]:grid-cols-[240px_1fr_340px]">
           {/* Left Poster */}
-          <div className="aspect-[2/3] w-full overflow-hidden rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
-            <img
-              src={movie.posterPath}
-              alt={movie.title}
-              className="block size-full object-cover"
-            />
+          <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
+            {posterUrl ? (
+              <img
+                src={posterUrl}
+                alt={movie.title}
+                className="block size-full object-cover"
+              />
+            ) : (
+              <div className="flex size-full items-center justify-center">
+                <img src="/movie-icons/movie.svg" alt="" className="size-12 opacity-40" />
+              </div>
+            )}
           </div>
 
           {/* Center Info */}
           <div className="flex flex-col gap-4">
-            <h2 className="text-xl font-extrabold leading-[1.4] text-gray-900">{movie.tagline}</h2>
-            <p className="text-[15px] leading-[1.7] text-gray-600">{movie.overview}</p>
+            {movie.tagline && (
+              <h2 className="text-xl font-extrabold leading-[1.4] text-gray-900">{movie.tagline}</h2>
+            )}
+            <p className="text-[15px] leading-[1.7] text-gray-600">
+              {movie.overview || "등록된 줄거리가 없어요."}
+            </p>
             <button
               type="button"
               className="mt-2 inline-flex items-center gap-2 self-start rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700"
               onClick={() => toggleBookmark(movie.id)}
+              aria-pressed={isBookmarked}
             >
               <img
                 src={

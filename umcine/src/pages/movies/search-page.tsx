@@ -1,26 +1,55 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { BookmarkButton } from "../../components/bookmark-button.tsx";
-import { searchMovies } from "../../data/search-movies.ts";
+import { searchMovies } from "../../api/movies/search-movies.ts";
+import type {TmdbMovieListItem} from "../../api/movies/models.ts";
+import { formatReleaseDate } from "../../utils/movies/format-movie.ts";
+import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image.ts";
 
 export default function SearchPage() {
-  const { query } = useSearch({ from: "/search" });
+  const { query = "" } = useSearch({ from: "/search" });
   const navigate = useNavigate({ from: "/search" });
-  const [searchText, setSearchText] = useState(query ?? "");
+  const normalizedQuery = query.trim();
+
+  const [searchText, setSearchText] = useState(query);
+  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(normalizedQuery !== "");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // URL의 query가 바뀌면(검색, 뒤로 가기 등) 렌더링 중에 바로 상태를 초기화해요.
+  // effect 안에서 setState를 하면 렌더링이 한 번 더 일어나서 이렇게 처리해요.
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+      setPrevQuery(query);
+      setSearchText(query);
+
+      // 공백만 달라진 경우엔 같은 검색이라 결과를 그대로 둬요.
+      if (normalizedQuery !== prevQuery.trim()) {
+          setMovies([]);
+          setErrorMessage(null);
+          setIsLoading(normalizedQuery !== "");
+      }
+  }
 
   useEffect(() => {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSearchText(query ?? "");
-  }, [query]);
+      if (!normalizedQuery) return;
 
-  const normalizedQuery = query?.trim().toLowerCase() ?? "";
-  const searchResults = normalizedQuery
-    ? searchMovies.filter(
-          (movie) =>
-              movie.title.toLowerCase().includes(normalizedQuery) ||
-              movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-  : [];
+      let ignore = false;
+
+      searchMovies({ query: normalizedQuery })
+          .then((response) => {
+              if (!ignore) setMovies(response.results);
+          })
+          .catch(() => {
+              if (!ignore) setErrorMessage("검색 결과를 불러오지 못했어요.");
+          })
+          .finally(() => {
+              if (!ignore) setIsLoading(false);
+          });
+
+      return () => {
+          ignore = true;
+      };
+  }, [normalizedQuery]);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
       event.preventDefault();
@@ -100,46 +129,62 @@ export default function SearchPage() {
               <h2 className="text-[17px] font-bold text-gray-900">
                 &apos;{query}&apos; 검색 결과
               </h2>
-              <span className="text-[13px] text-gray-400">
-                영화 {searchResults.length}편
-              </span>
+              {!isLoading && !errorMessage && (
+                <span className="text-[13px] text-gray-400">
+                  영화 {movies.length}편
+                </span>
+              )}
             </div>
 
-            {searchResults.length === 0 ? (
+            {isLoading ? (
+              <p className="text-sm text-gray-400">검색 중이에요...</p>
+            ) : errorMessage ? (
+              <p className="text-sm text-red-500">{errorMessage}</p>
+            ) : movies.length === 0 ? (
               <p>검색 결과가 없어요.</p>
             ) : (
               <div className="grid grid-cols-1 gap-x-8 gap-y-7 min-[901px]:grid-cols-2">
-                {searchResults.map((movie) => (
-                  <article key={movie.id} className="flex items-start gap-[18px]">
-                    <div className="aspect-[2/3] w-[110px] min-w-[110px] overflow-hidden rounded-lg bg-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.08)]">
-                      <img
-                        src={movie.posterPath}
-                        alt={`${movie.title} 포스터`}
-                        className="block size-full object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <h3 className="text-base font-bold text-gray-900">{movie.title}</h3>
-                      <p className="text-xs text-gray-500">
-                        {movie.originalTitle} {movie.releaseDate}
-                      </p>
-                      <p className="line-clamp-2 text-[13px] leading-[1.45] text-gray-600">{movie.overview}</p>
-                      <Link
-                        to="/movies/$movieId"
-                        params={{ movieId: String(movie.id) }}
-                        className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 transition-colors hover:text-blue-700"
-                      >
-                        상세 보기
-                        <img
-                          src="/movie-icons/arrow-right.svg"
-                          alt=""
-                          className="size-3.5 [filter:invert(34%)_sepia(87%)_saturate(2250%)_hue-rotate(210deg)_brightness(97%)_contrast(92%)]"
-                        />
-                      </Link>
-                      <BookmarkButton movieId={movie.id} />
-                    </div>
-                  </article>
-                ))}
+                {movies.map((movie) => {
+                  const posterUrl = getTmdbPosterUrl(movie.poster_path);
+
+                  return (
+                    <article key={movie.id} className="flex items-start gap-[18px]">
+                      <div className="aspect-[2/3] w-[110px] min-w-[110px] overflow-hidden rounded-lg bg-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.08)]">
+                        {posterUrl ? (
+                          <img
+                            src={posterUrl}
+                            alt={`${movie.title} 포스터`}
+                            className="block size-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center">
+                            <img src="/movie-icons/movie.svg" alt="" className="size-8 opacity-40" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <h3 className="text-base font-bold text-gray-900">{movie.title}</h3>
+                        <p className="text-xs text-gray-500">
+                          {movie.original_title} {formatReleaseDate(movie.release_date)}
+                        </p>
+                        <p className="line-clamp-2 text-[13px] leading-[1.45] text-gray-600">{movie.overview}</p>
+                        <Link
+                          to="/movies/$movieId"
+                          params={{ movieId: String(movie.id) }}
+                          className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                        >
+                          상세 보기
+                          <img
+                            src="/movie-icons/arrow-right.svg"
+                            alt=""
+                            className="size-3.5 [filter:invert(34%)_sepia(87%)_saturate(2250%)_hue-rotate(210deg)_brightness(97%)_contrast(92%)]"
+                          />
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
