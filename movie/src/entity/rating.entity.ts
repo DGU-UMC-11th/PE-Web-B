@@ -4,11 +4,13 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
 } from "typeorm";
 import { BaseTimeEntity } from "./base-time.entity.js";
 import { MemberEntity } from "./member.entity.js";
 
 @Entity("rating")
+@Unique(["member", "movieId"])
 export class RatingEntity extends BaseTimeEntity {
   @PrimaryGeneratedColumn({ name: "rating_id" })
   ratingId: number;

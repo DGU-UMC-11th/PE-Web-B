@@ -28,7 +28,7 @@ function getMovies({page = 1}: GetMoviesRequest = {}) {
 
 const popularMoviesQuery = (page: number) =>
     queryOptions({
-        queryKey: ["movies", page],
+        queryKey: ["movies", "list", {page}],
         queryFn: () => getMovies({ page }),
         select: toMoviePage,
         placeholderData: keepPreviousData, // 페이지 이동 시 이전 목록 유지
