@@ -1,6 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, type SubmitEvent } from "react";
-import type { TmdbMovieListItem } from "../../api/movies/models";
+import { useState, type SubmitEvent } from "react";
 import { searchMovies } from "../../api/movies/search-movies";
 import { BookmarkButton } from "../../components/movies/bookmark-button";
 import { MovieImage } from "../../components/movies/movie-image";
@@ -20,42 +20,15 @@ export function SearchPage() {
   }
 
   const normalizedQuery = query?.trim() ?? "";
-  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
-  const [totalResults, setTotalResults] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    let ignore = false;
+  const searchQuery = useQuery({
+    queryKey: ["movies", "search", { query: normalizedQuery }],
+    queryFn: () => searchMovies({ query: normalizedQuery }),
+    enabled: normalizedQuery.length > 0,
+  });
 
-    setMovies([]);
-    setTotalResults(0);
-    setErrorMessage(null);
-
-    if (!normalizedQuery) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    searchMovies({ query: normalizedQuery })
-      .then((response) => {
-        if (ignore) return;
-        setMovies(response.results);
-        setTotalResults(response.total_results);
-      })
-      .catch(() => {
-        if (!ignore) setErrorMessage("검색 결과를 불러오지 못했어요.");
-      })
-      .finally(() => {
-        if (!ignore) setIsLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [normalizedQuery]);
+  const searchResults = searchQuery.data?.results ?? [];
+  const totalResults = searchQuery.data?.total_results ?? 0;
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,13 +71,19 @@ export function SearchPage() {
   }
 
   function renderResults() {
-    if (isLoading) return <StatusMessage>검색 결과를 불러오는 중이에요.</StatusMessage>;
-    if (errorMessage) return <StatusMessage tone="error">{errorMessage}</StatusMessage>;
-    if (movies.length === 0) return <StatusMessage>검색 결과가 없어요.</StatusMessage>;
+    if (searchQuery.isLoading) {
+      return <StatusMessage>검색 결과를 불러오는 중이에요.</StatusMessage>;
+    }
+    if (searchQuery.isError) {
+      return <StatusMessage tone="error">검색 결과를 불러오지 못했어요.</StatusMessage>;
+    }
+    if (searchQuery.isSuccess && searchResults.length === 0) {
+      return <StatusMessage>검색 결과가 없어요.</StatusMessage>;
+    }
 
     return (
       <ul className="grid grid-cols-2 gap-x-10">
-        {movies.map((movie) => (
+        {searchResults.map((movie) => (
           <li key={movie.id}>
             <article className="flex gap-[18px] border-b border-line py-5">
               <div className="relative h-[190px] w-[126px] shrink-0 overflow-hidden rounded-[10px] bg-page">
@@ -180,7 +159,7 @@ export function SearchPage() {
 
       <div className="flex h-[54px] items-center justify-between border-y border-line">
         <h2 className="text-lg font-bold">‘{query}’ 검색 결과</h2>
-        {!isLoading && !errorMessage && (
+        {searchQuery.isSuccess && (
           <span className="text-xs text-ink-tertiary">영화 {totalResults}편</span>
         )}
       </div>
