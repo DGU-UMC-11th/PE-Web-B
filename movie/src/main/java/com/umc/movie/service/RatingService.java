@@ -5,6 +5,7 @@ import com.umc.movie.dto.RatingResponse;
 import com.umc.movie.dto.UpdateRatingRequest;
 import com.umc.movie.entity.Member;
 import com.umc.movie.entity.Rating;
+import com.umc.movie.exception.ApiException;
 import com.umc.movie.repository.MemberRepository;
 import com.umc.movie.repository.RatingRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,8 @@ public class RatingService {
     @Transactional(readOnly = true)
     public List<RatingResponse> getRatingByMember(Long memberId, long page, long size) {
         if(!memberRepository.existsById(memberId)) {
-            // 아직 안함
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다.");
+            throw new ApiException(HttpStatus.NOT_FOUND, "MEMBER404_1",
+                    "존재하지 않는 유저입니다.");
         }
         return ratingRepository.findByMember_MemberIdOrderByRatingIdDesc(memberId)
                 .stream()
@@ -39,10 +40,12 @@ public class RatingService {
     @Transactional
     public Long create(Long memberId, CreateRatingRequest request) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "MEMBER404_1",
+                        "존재하지 않는 유저입니다."));
 
         if (ratingRepository.existsByMember_MemberIdAndMovieId(memberId, request.movieId())) {
-            throw new IllegalArgumentException("이미 이 영화에 평점을 남기셨습니다.");
+            throw new ApiException(HttpStatus.CONFLICT, "RATING409_1",
+                    "이미 이 영화에 평점을 남기셨습니다.");
         }
 
         Rating rating = Rating.builder()
@@ -51,7 +54,8 @@ public class RatingService {
                 .score(request.score())
                 .comment(request.comment())
                 .build();
-        return ratingRepository.save(rating).getRatingId();
+
+        return RatingResponse.from(ratingRepository.save(rating));
     }
 
     @Transactional
