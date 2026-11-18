@@ -4,7 +4,7 @@ import com.umc.movie.dto.ApiResponse;
 import com.umc.movie.dto.CreateRatingRequest;
 import com.umc.movie.dto.RatingResponse;
 import com.umc.movie.dto.UpdateRatingRequest;
-import com.umc.movie.interceptor.AuthInterceptor;
+import com.umc.movie.resolver.LoginMember;
 import com.umc.movie.service.RatingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class RatingController {
 
     @PostMapping("/ratings")
     public ResponseEntity<ApiResponse<RatingResponse>> create(
-            @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
+            @LoginMember Long memberId,
             @Valid @RequestBody CreateRatingRequest request
             ) {
         RatingResponse response = ratingService.create(memberId, request);
@@ -38,7 +38,7 @@ public class RatingController {
 
     @PatchMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<Void>> update(
-            @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
+            @LoginMember Long memberId,
             @PathVariable Long ratingId,
             @Valid @RequestBody UpdateRatingRequest request
     ) {
@@ -48,7 +48,7 @@ public class RatingController {
 
     @DeleteMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<Void>> delete(
-            @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
+            @LoginMember Long memberId,
             @PathVariable Long ratingId
     ) {
         ratingService.delete(memberId, ratingId);
