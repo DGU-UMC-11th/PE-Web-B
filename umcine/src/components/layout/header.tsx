@@ -9,6 +9,7 @@ export function Header() {
   const pathname = useLocation({ select: (location) => location.pathname });
   const isMoviesActive = pathname === "/" || pathname.startsWith("/movies");
   const isSearchActive = pathname.startsWith("/search");
+  const isMyActive = pathname.startsWith("/me");
 
   return (
     <header className="flex h-auto min-h-[104px] shrink-0 items-center border-b border-gray-200 bg-white py-3 sm:h-[76px] sm:min-h-0 sm:py-0 md:h-[90px]">
@@ -42,7 +43,13 @@ export function Header() {
           >
             검색
           </Link>
-          <span className={cn(navLinkClass, "cursor-default")}>내 정보</span>
+          <Link
+            to="/me"
+            className={cn(navLinkClass, isMyActive && activeNavLinkClass)}
+            aria-current={isMyActive ? "page" : undefined}
+          >
+            내 정보
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
@@ -53,12 +60,12 @@ export function Header() {
           >
             <img className="size-[22px] opacity-65" src="/icons/search.svg" alt="" />
           </Link>
-          <button
-            type="button"
-            className="h-9 rounded-md bg-blue-600 px-3.5 text-sm font-semibold text-white sm:h-10 sm:px-[18px]"
+          <Link
+            to="/login"
+            className="grid h-9 place-items-center rounded-md bg-blue-600 px-3.5 text-sm font-semibold text-white no-underline sm:h-10 sm:px-[18px]"
           >
             로그인
-          </button>
+          </Link>
         </div>
       </div>
     </header>
