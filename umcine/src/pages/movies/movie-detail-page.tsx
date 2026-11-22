@@ -4,7 +4,8 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { isHTTPError } from "ky";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
-import { BookmarkButtonDetailPage } from "../../components/bookmark-button";
+import { FavoriteButton } from "../../components/favorite-button";
+import { RatingSection } from "../../components/rating-section";
 import Poster from "../../components/movies/poster";
 import { ErrorMessage, LoadingMessage } from "../../components/query-status";
 import { toMovieDetail } from "../../utils/movies/movie-adapter";
@@ -74,7 +75,8 @@ export function MovieDetailPage() {
                 <div>
                     <h2 className="text-xl font-bold">{movie.tagline}</h2>
                     <p className="mt-3 text-sm leading-relaxed text-gray-600">{movie.overview}</p>
-                    <BookmarkButtonDetailPage movieId={movie.id}/>
+                    <FavoriteButton movieId={movie.id}/>
+                    <RatingSection movieId={movie.id} />
                 </div>
             </div>
         </main>

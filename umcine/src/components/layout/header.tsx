@@ -1,9 +1,21 @@
 import { Link } from "@tanstack/react-router"
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
+import { useAuthStore } from "../../stores/auth-store";
 
 const navClass = "text-sm text-gray-600";
 const activeProps = { className: "font-bold text-ink underline underline-offset-4" };
 
 export default function Header() {
+    const accessToken = useAuthStore((state) => state.accessToken);
+    const meQuery = useQuery({
+        queryKey: ["members", "me"],
+        queryFn: getMe,
+        enabled: Boolean(accessToken),
+        staleTime: 5 * 60 * 1000,
+        retry: false,
+    });
+
     return (
         <header className="border-b border-gray-200 bg-white">
             <div className="mx-auto flex h-16 max-w-[1170px] items-center gap-8">
@@ -20,8 +32,13 @@ export default function Header() {
                 <Link to="/search" aria-label="검색" className="rounded-lg border border-gray-200 p-2">
                     <img src="/icons/search.svg" alt="" className="size-5" />
                 </Link>
-                {/* placeholder: 로그인 동작 없음 */}
-                <button type="button" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">로그인</button>
+                {!accessToken ? (
+                    <Link to="/login" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">로그인</Link>
+                ) : meQuery.isLoading ? (
+                    <span className="h-10 w-24 animate-pulse rounded-lg bg-gray-200" />
+                ) : (
+                    <Link to="/my" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white">마이페이지</Link>
+                )}
             </div>
         </header>
     );

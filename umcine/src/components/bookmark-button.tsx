@@ -34,27 +34,3 @@ export function BookmarkButton({ movieId }: BookmarkButtonProps) {
 //     </button>
 //   );
 }
-
-export function BookmarkButtonDetailPage({ movieId }: BookmarkButtonProps) {
-    const isBookmarked = useBookmarkStore((state) =>
-        state.bookmarkedMovieIds.includes(movieId), 
-    );
-    //큰 state 안에 값 접근
-    const toggleBookmark = useBookmarkStore(
-        (state) => state.toggleBookmark,
-    );
-
-    return (<button
-        type="button"
-        onClick={() => toggleBookmark(movieId)}
-        aria-pressed={isBookmarked}
-        className="mt-4 flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white"
-    >
-        <img
-            src={isBookmarked ? "/icons/bookmark.svg" : "/icons/bookmark-outline.svg"}
-            alt=""
-            className="size-4 invert"
-        />
-        {isBookmarked ? "즐겨찾기 해제" : "즐겨찾기"}
-    </button>);
-}
