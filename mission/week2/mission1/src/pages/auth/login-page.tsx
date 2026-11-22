@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState, type SubmitEvent } from "react";
 import { AuthLayout } from "../../components/auth/auth-layout";
 import { FormField, SubmitButton } from "../../components/auth/form-field";
+import { useLoginMutation } from "../../hooks/use-login-mutation";
 import { isValidEmail } from "../../utils/auth/validation";
 
 const DEFAULT_FORM = {
@@ -13,6 +14,7 @@ type LoginFormKey = keyof typeof DEFAULT_FORM;
 
 export function LoginPage() {
   const [form, setForm] = useState(DEFAULT_FORM);
+  const loginMutation = useLoginMutation();
 
   const isEmailValid = isValidEmail(form.email);
   const showEmailError = form.email.length > 0 && !isEmailValid;
@@ -24,10 +26,13 @@ export function LoginPage() {
 
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || loginMutation.isPending) return;
 
-    // 로그인 API 연결은 8주차에 진행
-    alert(`${form.email.trim()} 계정의 로그인은 8주차에 연결할 예정이에요.`);
+    // 토큰 저장, 내 정보 갱신, 홈 이동은 useLoginMutation의 onSuccess에서 해요.
+    loginMutation.mutate({
+      email: form.email.trim(),
+      password: form.password,
+    });
   };
 
   return (
@@ -55,7 +60,9 @@ export function LoginPage() {
         />
 
         <div className="mt-2">
-          <SubmitButton disabled={!canSubmit}>로그인</SubmitButton>
+          <SubmitButton disabled={!canSubmit || loginMutation.isPending}>
+            {loginMutation.isPending ? "로그인 중" : "로그인"}
+          </SubmitButton>
         </div>
       </form>
 
