@@ -1,0 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../api/members/me";
+import { useAuthStore } from "../stores/auth-store";
+
+export function useMeQuery() {
+  const token = useAuthStore((state) => state.accessToken);
+  return useQuery({ queryKey: ["members", "me"], queryFn: getMe,
+    enabled: Boolean(token), staleTime: 5 * 60 * 1000, retry: false });
+}
