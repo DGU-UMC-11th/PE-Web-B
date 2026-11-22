@@ -1,5 +1,7 @@
+import { useNavigate } from "@tanstack/react-router";
 import type { TmdbMovie } from "../../api/movies/models";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useFavoritesQuery, useToggleFavoriteMutation } from "../../hooks/use-favorites.ts";
+import { useAuthStore } from "../../stores/auth-store.ts";
 import { cn } from "../../utils/cn";
 import { formatReleaseDate } from "../../utils/movies/format-movie";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
@@ -10,17 +12,26 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ movie, onSelectMovie }: MovieCardProps) {
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(movie.id),
-  );
-  const toggleBookmark = useBookmarkStore((state) => state.toggleBookmark);
+  const navigate = useNavigate();
+  const isLoggedIn = useAuthStore((state) => Boolean(state.accessToken));
+  // 카드마다 따로 요청하지 않고, 같은 queryKey의 즐겨찾기 목록 하나를 모든 카드가 함께 써요.
+  const favoritesQuery = useFavoritesQuery();
+  const toggleFavoriteMutation = useToggleFavoriteMutation();
+  const isBookmarked =
+    favoritesQuery.data?.some((favorite) => favorite.movieId === movie.id) ?? false;
 
   const posterUrl = getTmdbPosterUrl(movie.poster_path);
   const releaseDate = formatReleaseDate(movie.release_date);
 
   const handleBookmarkClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    toggleBookmark(movie.id);
+    if (!isLoggedIn) {
+      alert("로그인하면 즐겨찾기할 수 있어요.");
+      navigate({ to: "/login" });
+      return;
+    }
+    if (favoritesQuery.isPending || toggleFavoriteMutation.isPending) return;
+    toggleFavoriteMutation.mutate({ movieId: movie.id, isFavorite: isBookmarked });
   };
 
   const handleCardClick = () => {
@@ -49,8 +60,11 @@ export default function MovieCard({ movie, onSelectMovie }: MovieCardProps) {
           className={cn(
             "absolute right-2.5 top-2.5 z-10 flex size-[34px] cursor-pointer items-center justify-center rounded-lg bg-gray-900/60 backdrop-blur-sm transition hover:scale-[1.08]",
             isBookmarked && "bg-blue-600 hover:bg-blue-700",
+            toggleFavoriteMutation.isPending && "cursor-wait opacity-60",
           )}
           onClick={handleBookmarkClick}
+          disabled={toggleFavoriteMutation.isPending}
+          aria-pressed={isBookmarked}
           aria-label={isBookmarked ? "북마크 해제" : "북마크 추가"}
         >
           <img
