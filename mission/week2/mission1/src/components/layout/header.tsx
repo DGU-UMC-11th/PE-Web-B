@@ -19,8 +19,9 @@ export function Header() {
             <Link to="/search" className="hover:text-ink">
               검색
             </Link>
-            {/* 아직 연결할 route가 없음 */}
-            <span>내 정보</span>
+            <Link to="/me" className="hover:text-ink">
+              내 정보
+            </Link>
           </nav>
         </div>
 
@@ -32,12 +33,12 @@ export function Header() {
           >
             <img src="/icons/search.svg" alt="" width={24} height={24} />
           </Link>
-          <button
-            type="button"
-            className="h-[42px] rounded-lg bg-primary px-4 text-sm font-extrabold text-white hover:bg-primary-hover"
+          <Link
+            to="/login"
+            className="flex h-[42px] items-center rounded-lg bg-primary px-4 text-sm font-extrabold text-white hover:bg-primary-hover"
           >
             로그인
-          </button>
+          </Link>
         </div>
       </div>
     </header>

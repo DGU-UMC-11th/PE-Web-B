@@ -8,4 +8,6 @@ if (!tmdbApiBaseUrl || !tmdbAccessToken) {
 export const env = {
   tmdbApiBaseUrl,
   tmdbAccessToken,
+  // 회원 서버 주소 (.env.local의 VITE_API_BASE_URL, 예: http://localhost:8080)
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "",
 };
