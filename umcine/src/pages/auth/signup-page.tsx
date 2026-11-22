@@ -1,26 +1,141 @@
 import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { checkEmailDuplicate } from "../../api/members/check-email-duplicate.ts";
+import { checkNicknameDuplicate } from "../../api/members/check-nickname-duplicate.ts";
+import { useSignupMutation } from "../../hooks/use-signup-mutation.ts";
+import { EMAIL_REGEX, PASSWORD_REGEX } from "../../utils/auth/validation.ts";
+import { cn } from "../../utils/cn.ts";
 
-interface SignupPageProps {
-  onNavigateLogin: () => void;
-  onSignupSuccess?: () => void;
+const DEFAULT_FORM = {
+  email: "",
+  nickname: "",
+  password: "",
+  passwordConfirm: "",
+};
+
+const DEFAULT_DUPLICATE_CHECK = {
+  isChecking: false,
+  isAvailable: false,
+};
+
+type DefaultFormKey = keyof typeof DEFAULT_FORM;
+type DefaultFormValue = (typeof DEFAULT_FORM)[DefaultFormKey];
+type DuplicateCheckKey = "email" | "nickname";
+
+const fieldBox =
+  "flex h-12 items-center rounded-lg border border-gray-200 bg-white px-4 transition-colors focus-within:border-blue-600";
+const fieldBoxError = "border-rose-500 focus-within:border-rose-500";
+const fieldInput =
+  "h-full min-w-0 flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 disabled:text-gray-400";
+const duplicateButton =
+  "py-1 text-[13px] font-semibold whitespace-nowrap text-blue-600 transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:text-gray-300";
+
+function FieldMessage({ error, children }: { error?: boolean; children: React.ReactNode }) {
+  return (
+    <p className={cn("mt-0.5 text-xs leading-[1.4]", error ? "text-rose-500" : "text-gray-400")}>
+      {children}
+    </p>
+  );
 }
 
-export default function SignupPage({
-  onNavigateLogin,
-  onSignupSuccess,
-}: SignupPageProps) {
-  const [email, setEmail] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+export default function SignupPage() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState(DEFAULT_FORM);
+  const [duplicateCheck, setDuplicateCheck] = useState({
+    email: DEFAULT_DUPLICATE_CHECK,
+    nickname: DEFAULT_DUPLICATE_CHECK,
+  });
+  const signupMutation = useSignupMutation();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSignupSuccess) {
-      onSignupSuccess();
-    } else {
-      onNavigateLogin();
+  // 입력값의 유효성 검사
+  const trimmedNickname = form.nickname.trim();
+  const isEmailValid = EMAIL_REGEX.test(form.email.trim());
+  const isNicknameValid = trimmedNickname.length >= 2 && trimmedNickname.length <= 12;
+  const isPasswordValid = PASSWORD_REGEX.test(form.password);
+  const isPasswordConfirmValid =
+    form.passwordConfirm.length > 0 && form.password === form.passwordConfirm;
+
+  // 입력을 시작한 필드에만 오류 표시
+  const showEmailError = form.email.length > 0 && !isEmailValid;
+  const showNicknameError = form.nickname.length > 0 && !isNicknameValid;
+  const showPasswordError = form.password.length > 0 && !isPasswordValid;
+  const showPasswordConfirmError = form.passwordConfirm.length > 0 && !isPasswordConfirmValid;
+
+  const isFormValid =
+    isEmailValid && isNicknameValid && isPasswordValid && isPasswordConfirmValid;
+
+  // 입력 조건과 두 중복 확인을 모두 통과해야 제출 가능
+  const canSubmit =
+    isFormValid && duplicateCheck.email.isAvailable && duplicateCheck.nickname.isAvailable;
+
+  const handleChangeField = (key: DefaultFormKey, value: DefaultFormValue) => {
+    if (key === "email" || key === "nickname") {
+      if (duplicateCheck[key].isChecking) return;
+      // 확인한 값을 바꾸면 다시 중복 확인해야 함
+      setDuplicateCheck((prev) => ({ ...prev, [key]: DEFAULT_DUPLICATE_CHECK }));
     }
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleCheckDuplicate = async (key: DuplicateCheckKey) => {
+    const isValid = key === "email" ? isEmailValid : isNicknameValid;
+    if (!isValid || duplicateCheck[key].isChecking) return;
+
+    const label = key === "email" ? "이메일" : "닉네임";
+    setDuplicateCheck((prev) => ({
+      ...prev,
+      [key]: { isChecking: true, isAvailable: false },
+    }));
+
+    try {
+      const response =
+        key === "email"
+          ? await checkEmailDuplicate(form.email.trim())
+          : await checkNicknameDuplicate(trimmedNickname);
+      const isAvailable = response.available;
+      setDuplicateCheck((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], isAvailable },
+      }));
+      alert(isAvailable ? `사용할 수 있는 ${label}이에요.` : `이미 사용 중인 ${label}이에요.`);
+    } catch {
+      setDuplicateCheck((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], isAvailable: false },
+      }));
+      alert("중복 확인에 실패했어요. 다시 시도해 주세요.");
+    } finally {
+      setDuplicateCheck((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], isChecking: false },
+      }));
+    }
+  };
+
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+    // 폼 제출 시 페이지 새로고침 방지
+    event.preventDefault();
+
+    if (!canSubmit || signupMutation.isPending) return;
+
+    // 성공·실패 alert는 useSignupMutation에서 처리해요.
+    // 실패하면 입력값을 유지한 채 다시 요청할 수 있어요.
+    signupMutation.mutate(
+      {
+        email: form.email.trim(),
+        nickname: trimmedNickname,
+        password: form.password,
+      },
+      {
+        // 화면 이동은 이 페이지에서만 필요한 동작이라 mutate 옵션으로 둬요.
+        onSuccess: () => navigate({ to: "/login" }),
+      },
+    );
+  };
+
+  const getDuplicateMessage = (key: DuplicateCheckKey) => {
+    if (duplicateCheck[key].isAvailable) return `사용할 수 있는 ${key === "email" ? "이메일" : "닉네임"}이에요.`;
+    return null;
   };
 
   return (
@@ -28,30 +143,38 @@ export default function SignupPage({
       <div className="flex w-full max-w-[440px] flex-col">
         <h1 className="mb-8 text-center text-[28px] font-extrabold text-gray-900">회원가입</h1>
 
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        {/* noValidate는 폼 제출 시 브라우저의 기본 유효성 검사를 끔 */}
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
           {/* 이메일 */}
           <div className="flex flex-col gap-2">
             <label className="text-[13px] font-bold text-gray-900" htmlFor="email">
               이메일
             </label>
-            <div className="flex h-12 items-center rounded-lg border border-gray-200 bg-white px-4 transition-colors focus-within:border-blue-600">
+            <div className={cn(fieldBox, showEmailError && fieldBoxError)}>
               <input
                 id="email"
                 type="email"
-                className="h-full flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
+                className={fieldInput}
                 placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                autoComplete="email"
+                value={form.email}
+                onChange={(e) => handleChangeField("email", e.target.value)}
+                disabled={duplicateCheck.email.isChecking}
+                aria-invalid={showEmailError}
               />
               <button
                 type="button"
-                className="py-1 text-[13px] font-semibold whitespace-nowrap text-blue-600 transition-colors hover:text-blue-700"
-                onClick={() => alert("사용 가능한 이메일입니다.")}
+                className={duplicateButton}
+                disabled={!isEmailValid || duplicateCheck.email.isChecking}
+                onClick={() => handleCheckDuplicate("email")}
               >
-                중복 확인
+                {duplicateCheck.email.isChecking ? "확인 중" : "중복 확인"}
               </button>
             </div>
+            {showEmailError && <FieldMessage error>올바른 이메일 형식을 입력해 주세요.</FieldMessage>}
+            {!showEmailError && getDuplicateMessage("email") && (
+              <p className="mt-0.5 text-xs leading-[1.4] text-blue-600">{getDuplicateMessage("email")}</p>
+            )}
           </div>
 
           {/* 닉네임 */}
@@ -59,24 +182,31 @@ export default function SignupPage({
             <label className="text-[13px] font-bold text-gray-900" htmlFor="nickname">
               닉네임
             </label>
-            <div className="flex h-12 items-center rounded-lg border border-gray-200 bg-white px-4 transition-colors focus-within:border-blue-600">
+            <div className={cn(fieldBox, showNicknameError && fieldBoxError)}>
               <input
                 id="nickname"
                 type="text"
-                className="h-full flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
+                className={fieldInput}
                 placeholder="2~12자"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                required
+                autoComplete="nickname"
+                value={form.nickname}
+                onChange={(e) => handleChangeField("nickname", e.target.value)}
+                disabled={duplicateCheck.nickname.isChecking}
+                aria-invalid={showNicknameError}
               />
               <button
                 type="button"
-                className="py-1 text-[13px] font-semibold whitespace-nowrap text-blue-600 transition-colors hover:text-blue-700"
-                onClick={() => alert("사용 가능한 닉네임입니다.")}
+                className={duplicateButton}
+                disabled={!isNicknameValid || duplicateCheck.nickname.isChecking}
+                onClick={() => handleCheckDuplicate("nickname")}
               >
-                중복 확인
+                {duplicateCheck.nickname.isChecking ? "확인 중" : "중복 확인"}
               </button>
             </div>
+            {showNicknameError && <FieldMessage error>닉네임은 2~12자로 입력해 주세요.</FieldMessage>}
+            {!showNicknameError && getDuplicateMessage("nickname") && (
+              <p className="mt-0.5 text-xs leading-[1.4] text-blue-600">{getDuplicateMessage("nickname")}</p>
+            )}
           </div>
 
           {/* 비밀번호 */}
@@ -84,50 +214,57 @@ export default function SignupPage({
             <label className="text-[13px] font-bold text-gray-900" htmlFor="password">
               비밀번호
             </label>
-            <input
-              id="password"
-              type="password"
-              className="h-12 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-colors focus:border-blue-600 placeholder:text-gray-400"
-              placeholder="8자 이상"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <p className="mt-0.5 text-xs leading-[1.4] text-gray-400">
+            <div className={cn(fieldBox, showPasswordError && fieldBoxError)}>
+              <input
+                id="password"
+                type="password"
+                className={fieldInput}
+                placeholder="8자 이상"
+                autoComplete="new-password"
+                value={form.password}
+                onChange={(e) => handleChangeField("password", e.target.value)}
+                aria-invalid={showPasswordError}
+              />
+            </div>
+            <FieldMessage error={showPasswordError}>
               영문 대·소문자, 숫자, 특수문자를 모두 포함해 8자 이상 입력해 주세요
-            </p>
+            </FieldMessage>
           </div>
 
           {/* 비밀번호 확인 */}
           <div className="flex flex-col gap-2">
-            <label className="text-[13px] font-bold text-gray-900" htmlFor="confirm-password">
+            <label className="text-[13px] font-bold text-gray-900" htmlFor="password-confirm">
               비밀번호 확인
             </label>
-            <input
-              id="confirm-password"
-              type="password"
-              className="h-12 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-colors focus:border-blue-600 placeholder:text-gray-400"
-              placeholder="다시 입력"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
+            <div className={cn(fieldBox, showPasswordConfirmError && fieldBoxError)}>
+              <input
+                id="password-confirm"
+                type="password"
+                className={fieldInput}
+                placeholder="다시 입력"
+                autoComplete="new-password"
+                value={form.passwordConfirm}
+                onChange={(e) => handleChangeField("passwordConfirm", e.target.value)}
+                aria-invalid={showPasswordConfirmError}
+              />
+            </div>
+            {showPasswordConfirmError && <FieldMessage error>비밀번호가 일치하지 않아요.</FieldMessage>}
           </div>
 
-          <button type="submit" className="mt-3 h-12 w-full rounded-lg bg-blue-600 text-[15px] font-bold text-white transition-colors hover:bg-blue-700">
-            가입하기
+          <button
+            type="submit"
+            className="mt-3 h-12 w-full rounded-lg bg-blue-600 text-[15px] font-bold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            disabled={!canSubmit || signupMutation.isPending}
+          >
+            {signupMutation.isPending ? "가입 중" : "가입하기"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-[13px] text-gray-500">
           이미 계정이 있나요?{" "}
-          <button
-            type="button"
-            className="font-semibold text-blue-600 underline underline-offset-[3px]"
-            onClick={onNavigateLogin}
-          >
+          <Link to="/login" className="font-semibold text-blue-600 underline underline-offset-[3px]">
             로그인
-          </button>
+          </Link>
         </p>
       </div>
     </div>
