@@ -1,0 +1,16 @@
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { signup } from "../api/members/signup";
+import { useAuthStore } from "../stores/auth-store";
+
+export function useSignupMutation() {
+  const navigate = useNavigate();
+  return useMutation({ mutationFn: signup,
+    onSuccess: (response) => {
+      useAuthStore.getState().rememberMember(response.result.email, response.result.memberId);
+      alert(response.message);
+      void navigate({ to: "/login" });
+    },
+    onError: () => alert("회원가입에 실패했어요. 다시 시도해 주세요."),
+  });
+}
