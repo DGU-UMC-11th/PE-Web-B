@@ -1,5 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { BookmarkButton } from "../../components/bookmark-button";
+import { MovieRatingSection } from "../../components/movies/movie-rating-section";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
 import {
   getTmdbBackdropUrl,
@@ -88,7 +89,10 @@ export function MovieDetailPage() {
 
             <div className="flex gap-8 px-20 py-6">
               <div className="relative shrink-0">
-                <BookmarkButton movieId={movieDetailQuery.data.id} />
+                <BookmarkButton
+                  movieId={movieDetailQuery.data.id}
+                  source="status"
+                />
                 {posterUrl ? (
                   <img
                     src={posterUrl}
@@ -111,6 +115,8 @@ export function MovieDetailPage() {
                 </p>
               </div>
             </div>
+
+            <MovieRatingSection movieId={movieDetailQuery.data.id} />
           </main>
         </>
       )}
