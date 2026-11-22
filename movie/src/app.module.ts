@@ -13,6 +13,11 @@ import { RatingService } from './service/rating.service.js';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './controller/auth.controller.js';
 import { AuthService } from './service/auth.service.js';
+import { FavoriteEntity } from './entity/favorite.entity.js';
+import { FavoriteController } from './controller/favorite.controller.js';
+import { FavoriteService } from './service/favorite.service.js';
+import { MovieRecordController } from './controller/movie-record.controller.js';
+import { MovieRecordService } from './service/movie-record.service.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -45,6 +50,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         TypeOrmModule.forFeature([
             MemberEntity,
             RatingEntity,
+            FavoriteEntity,
         ]),
 
         JwtModule.registerAsync({
@@ -63,12 +69,16 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         MemberController,
         RatingController,
         AuthController,
+        FavoriteController,
+        MovieRecordController,
     ],
     providers: [
         // AppService
         MemberService,
         RatingService,
         AuthService,
+        FavoriteService,
+        MovieRecordService,
     ],
 })
 export class AppModule {}
