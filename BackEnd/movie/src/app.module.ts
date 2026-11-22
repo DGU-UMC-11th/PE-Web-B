@@ -10,6 +10,11 @@ import { MemberService } from './service/member.service.js';
 import { RatingService } from './service/rating.service.js';
 import { AuthService } from './service/auth.service.js';
 import { JwtModule } from '@nestjs/jwt';
+import { Favorite } from './entity/favorite.entity.js';
+import { FavoriteController } from './controller/favorite.controller.js';
+import { FavoriteService } from './service/favorite.service.js';
+import { MovieRecordController } from './controller/movie-record.controller.js';
+import { MovieRecordService } from './service/movie-record.service.js';
 
 @Module({
   imports: [
@@ -24,7 +29,7 @@ import { JwtModule } from '@nestjs/jwt';
       autoLoadEntities: true,
       synchronize: false,
     }),
-    TypeOrmModule.forFeature([Member, Rating]),
+    TypeOrmModule.forFeature([Member, Rating, Favorite]),
     JwtModule.registerAsync({
       global: true, // 전역 등록해두면 어느 서비스에서든 JwtService를 주입받을 수 있습니다
       inject: [ConfigService],
@@ -39,7 +44,19 @@ import { JwtModule } from '@nestjs/jwt';
       }),
     }),
   ],
-  controllers: [MemberController, RatingController, AuthController],
-  providers: [MemberService, RatingService, AuthService],
+  controllers: [
+    MemberController,
+    RatingController,
+    AuthController,
+    FavoriteController,
+    MovieRecordController,
+  ],
+  providers: [
+    MemberService,
+    RatingService,
+    AuthService,
+    FavoriteService,
+    MovieRecordService,
+  ],
 })
 export class AppModule {}
