@@ -8,4 +8,6 @@ if(!tmdbApiBaseUrl || !tmdbAccessToken) {
 export const env = {
     tmdbApiBaseUrl,
     tmdbAccessToken,
+    // 회원 서버(Spring) 주소. .env.local의 VITE_API_BASE_URL에 http://localhost:8080을 넣어요.
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "",
 };
