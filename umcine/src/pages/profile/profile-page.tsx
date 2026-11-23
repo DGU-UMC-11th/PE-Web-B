@@ -1,52 +1,57 @@
-import type { TmdbMovie } from "../../api/movies/models";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueries } from "@tanstack/react-query";
+import { getMovieDetail } from "../../api/movies/get-movie-detail.ts";
+import type { TmdbMovieDetail } from "../../api/movies/models";
 import MovieCard from "../../components/movies/movie-card";
-import Pagination from "../../components/movies/pagination";
+import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useProfileStore } from "../../stores/profile-store";
 
-interface ProfilePageProps {
-  nickname: string;
-  email: string;
-  bookmarkedMovies: TmdbMovie[];
-  onNavigateEdit: () => void;
-}
+export default function ProfilePage() {
+  const navigate = useNavigate();
+  const nickname = useProfileStore((state) => state.nickname);
+  const email = useProfileStore((state) => state.email);
+  const bookmarkedMovieIds = useBookmarkStore((state) => state.bookmarkedMovieIds);
 
-export default function ProfilePage({
-  nickname,
-  email,
-  bookmarkedMovies,
-  onNavigateEdit,
-}: ProfilePageProps) {
+  // 즐겨찾기한 영화의 상세 정보를 영화 상세 페이지와 같은 queryKey로 불러와 캐시를 함께 써요.
+  const bookmarkQueries = useQueries({
+    queries: bookmarkedMovieIds.map((movieId) => ({
+      queryKey: ["movies", "detail", movieId],
+      queryFn: () => getMovieDetail(movieId),
+    })),
+  });
+
+  const bookmarkedMovies = bookmarkQueries
+    .map((query) => query.data)
+    .filter((movie): movie is TmdbMovieDetail => movie !== undefined);
+  const isBookmarksPending = bookmarkQueries.some((query) => query.isPending);
+
   return (
     <div className="min-h-[calc(100vh-64px-80px)] w-full">
-      <div className="mx-auto max-w-[1360px] px-10 pt-10 pb-[60px]">
+      <div className="mx-auto max-w-[1360px] px-4 pt-10 pb-[60px] sm:px-6 lg:px-10">
         <div className="mb-9 flex items-center justify-between">
           <h1 className="text-[26px] font-extrabold tracking-[-0.5px] text-gray-900">내 정보</h1>
-          <button
-            type="button"
-            className="h-[38px] rounded-lg bg-blue-600 px-[18px] text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-            onClick={onNavigateEdit}
+          <Link
+            to="/me/edit"
+            className="flex h-[38px] items-center rounded-lg bg-blue-600 px-[18px] text-sm font-semibold text-white transition-colors hover:bg-blue-700"
           >
             정보 수정
-          </button>
+          </Link>
         </div>
 
         {/* 기본 정보 */}
         <section className="mb-12">
           <h2 className="mb-4 text-base font-bold text-gray-900">기본 정보</h2>
-          <div className="flex items-center gap-12 border-b border-gray-200 pt-6 pb-8">
+          <div className="flex flex-wrap items-center gap-x-12 gap-y-4 border-b border-gray-200 pt-6 pb-8">
             <div className="flex size-[68px] items-center justify-center rounded-full bg-gray-200">
-              <img
-                src="/movie-icons/person.svg"
-                alt=""
-                className="size-9 opacity-60"
-              />
+              <img src="/movie-icons/person.svg" alt="" className="size-9 opacity-60" />
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs text-gray-400">닉네임</span>
               <span className="text-[15px] font-bold text-gray-900">{nickname}</span>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 flex-col gap-1">
               <span className="text-xs text-gray-400">이메일</span>
-              <span className="text-[15px] font-bold text-gray-900">{email}</span>
+              <span className="truncate text-[15px] font-bold text-gray-900">{email}</span>
             </div>
           </div>
         </section>
@@ -54,19 +59,22 @@ export default function ProfilePage({
         {/* 내 즐겨찾기 */}
         <section className="mb-12">
           <h2 className="mb-4 text-base font-bold text-gray-900">내 즐겨찾기</h2>
-          {bookmarkedMovies.length > 0 ? (
-            <>
-              <div className="grid grid-cols-2 gap-x-5 gap-y-7 min-[641px]:grid-cols-3 min-[901px]:grid-cols-4 min-[1201px]:grid-cols-5">
-                {bookmarkedMovies.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
-                ))}
-              </div>
-              <Pagination currentPage={1} totalPages={1} />
-            </>
+          {bookmarkedMovieIds.length === 0 ? (
+            <p className="py-10 text-sm text-gray-400">아직 즐겨찾기한 영화가 없어요.</p>
+          ) : isBookmarksPending && bookmarkedMovies.length === 0 ? (
+            <p className="py-10 text-sm text-gray-400">즐겨찾기한 영화를 불러오는 중이에요...</p>
           ) : (
-            <p className="py-10 text-sm text-gray-400">
-              아직 즐겨찾기한 영화가 없습니다.
-            </p>
+            <div className="grid grid-cols-2 gap-x-5 gap-y-7 min-[641px]:grid-cols-3 min-[901px]:grid-cols-4 min-[1201px]:grid-cols-5">
+              {bookmarkedMovies.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  onSelectMovie={(movieId) =>
+                    navigate({ to: "/movies/$movieId", params: { movieId: String(movieId) } })
+                  }
+                />
+              ))}
+            </div>
           )}
         </section>
       </div>

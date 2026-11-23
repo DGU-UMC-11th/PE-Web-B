@@ -11,6 +11,7 @@ export default function Header() {
   // 영화 상세(/movies/$movieId)도 영화 메뉴에 속해요.
   const isMovies = pathname === "/" || pathname.startsWith("/movies/");
   const isSearch = pathname === "/search";
+  const isProfile = pathname === "/me" || pathname.startsWith("/me/");
 
   return (
     <header className="sticky top-0 z-50 h-16 w-full border-b border-gray-200 bg-white">
@@ -37,9 +38,13 @@ export default function Header() {
             >
               검색
             </Link>
-            <button type="button" className={navItem}>
+            <Link
+              to="/me"
+              className={cn(navItem, isProfile && navItemActive)}
+              aria-current={isProfile ? "page" : undefined}
+            >
               내 정보
-            </button>
+            </Link>
           </nav>
         </div>
 
@@ -51,12 +56,12 @@ export default function Header() {
           >
             <img src="/movie-icons/search.svg" alt="" className="size-[18px]" />
           </Link>
-          <button
-            type="button"
+          <Link
+            to="/login"
             className="flex h-9 items-center justify-center whitespace-nowrap rounded-lg bg-blue-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 sm:px-4"
           >
             로그인
-          </button>
+          </Link>
         </div>
       </div>
     </header>
