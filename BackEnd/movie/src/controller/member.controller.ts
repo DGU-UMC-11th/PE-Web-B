@@ -5,10 +5,16 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express'; // 데코레이터 시그니처에 쓰는 타입은 import type 이어야 합니다
 import { CreateMemberDto } from '../dto/create-member.dto.js';
 import { MemberService } from '../service/member.service.js';
+import { AuthGuard } from '../guard/auth.guard.js';
+import { MemberUpdateRequestDto } from '../dto/member-update-request.dto.js';
 
 @Controller('members')
 export class MemberController {
@@ -32,6 +38,38 @@ export class MemberController {
       isSuccess: true,
       code: 'COMMON201',
       message: '회원가입에 성공했습니다.',
+      result,
+    };
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard) // 이 줄이 없으면 토큰 없이도 호출됩니다
+  async getMyInfo(@Req() request: Request & { memberId?: number }) {
+    // Guard가 request.memberId에 담아둔 값을 꺼냅니다
+    const memberId = request.memberId as number;
+
+    const result = await this.memberService.getMyInfo(memberId);
+    return {
+      isSuccess: true,
+      code: 'COMMON200',
+      message: '회원 정보를 조회했습니다.',
+      result,
+    };
+  }
+
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  async updateMyInfo(
+    @Req() request: Request & { memberId?: number },
+    @Body() dto: MemberUpdateRequestDto,
+  ) {
+    const memberId = request.memberId as number;
+
+    const result = await this.memberService.updateMyInfo(memberId, dto);
+    return {
+      isSuccess: true,
+      code: 'COMMON200',
+      message: '회원 정보를 수정했습니다.',
       result,
     };
   }
